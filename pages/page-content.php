@@ -25,6 +25,11 @@
     </div>
     <div class="a-meta">
         <span class="float-left d-none d-md-block">
+            <div class="tags">
+                <span><?php _e('标签：' , 'kratos'); ?></span>
+                <?php if ( get_the_tags() ) { the_tags('', ',  ', ''); } else{ echo '<a>' . __( '暂无' , 'kratos') . '</a>';  }?>
+            </div>
+            <span><?php _e('作者：'); echo get_the_author(); ?></span>
             <span class="mr-2"><i class="kicon i-calendar"></i><?php echo get_the_date('Y年m月d日'); ?></span>
             <span class="mr-2"><i class="kicon i-comments"></i><?php comments_number('0', '1', '%'); _e('条评论', 'kratos'); ?></span>
         </span>

@@ -192,8 +192,9 @@ class widget_about extends WP_Widget
 
     public function widget($args, $instance)
     {
-        $introduce = kratos_option('a_about', __('保持饥渴的专注，追求最佳的品质', 'kratos'));
-        $username = kratos_option('a_nickname', __('Kratos', 'kratos'));
+        $introduce = kratos_option('a_about', __('用户入口', 'kratos'));
+        // $username = kratos_option('a_nickname', __('Kratos', 'kratos'));
+        $username = ( is_user_logged_in() ? wp_get_current_user()->user_login : 'Anonymous');
         $avatar = kratos_option('a_gravatar', ASSET_PATH . '/assets/img/gravatar.png');
         $background = !empty($instance['background']) ? $instance['background'] : ASSET_PATH . '/assets/img/about-background.png';
 
