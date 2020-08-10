@@ -47,12 +47,17 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
                         </div>
                         <div class="header">
                             <h1 class="title"><?php the_title(); ?></h1>
+                            <div class="tags">
+                                <span><?php _e('标签：' , 'kratos'); ?></span>
+                                <?php if ( get_the_tags() ) { the_tags('', ',  ', ''); } else{ echo '<a>' . __( '暂无' , 'kratos') . '</a>';  }?>
+                            </div>
                             <div class="meta">
-                            <span><?php echo get_the_date('Y年m月d日'); ?></span>
-                            <span ><?php echo get_post_views(); _e('点热度' , 'kratos'); ?></span>
-                            <span><?php if (get_post_meta($post->ID, 'love', true)) { echo get_post_meta($post->ID, 'love', true); } else {echo '0'; } _e('人点赞', 'kratos'); ?></span>
-                            <span><?php comments_number('0', '1', '%'); _e('条评论', 'kratos'); ?></span>
-                            <?php if (current_user_can('edit_posts')){ echo '<span>'; edit_post_link(__('编辑文章', 'kratos')); echo '</span>'; }; ?>
+                                <span><?php _e('作者：'); echo get_the_author(); ?></span>
+                                <span><?php echo get_the_date('Y年m月d日'); ?></span>
+                                <span ><?php echo get_post_views(); _e('点热度' , 'kratos'); ?></span>
+                                <span><?php if (get_post_meta($post->ID, 'love', true)) { echo get_post_meta($post->ID, 'love', true); } else {echo '0'; } _e('人点赞', 'kratos'); ?></span>
+                                <span><?php comments_number('0', '1', '%'); _e('条评论', 'kratos'); ?></span>
+                                <?php if (current_user_can('edit_posts')){ echo '<span>'; edit_post_link(__('编辑文章', 'kratos')); echo '</span>'; }; ?>
                             </div>
                         </div>
                         <div class="content">
