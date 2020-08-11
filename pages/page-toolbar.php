@@ -8,9 +8,9 @@
 ?>
 <div class="toolbar clearfix">
     <div class="meta float-md-left">
-		<img src="<?php echo kratos_option('a_gravatar', ASSET_PATH . '/assets/img/gravatar.png'); ?>">
-		<p class="name"><?php echo kratos_option('a_nickname','Kratos'); ?></p>
-		<p class="motto mb-0"><?php echo kratos_option('a_about', __('All for DN', 'kratos')); ?></p>
+        <img src="<?php echo get_avatar_url(get_the_author_meta('ID')); ?>">
+        <p class="name"><?php echo get_the_author(); ?></p>
+		<p class="motto mb-0"><?php echo get_the_author_meta('description'); ?></p>
 	</div>
 	<div class="share float-md-right text-center">
         <?php if(kratos_option('g_donate',false)){ ?>
