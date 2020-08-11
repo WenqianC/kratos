@@ -194,7 +194,7 @@ class widget_about extends WP_Widget
     {
         // $introduce = kratos_option('a_about', __('用户入口test', 'kratos'));
         // $username = kratos_option('a_nickname', __('Kratos', 'kratos'));
-        $username = ( is_user_logged_in() ? wp_get_current_user()->user_login : 'Anonymous');
+        $username = ( is_user_logged_in() ? wp_get_current_user()->display_name : 'Anonymous');
         $introduce = ( is_user_logged_in() ? wp_get_current_user()->description : '');
         $avatar = ( is_user_logged_in() ? get_avatar_url(wp_get_current_user()->ID) : kratos_option('a_gravatar', ASSET_PATH . '/assets/img/gravatar.png'));
         $background = !empty($instance['background']) ? $instance['background'] : ASSET_PATH . '/assets/img/about-background.png';
