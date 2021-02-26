@@ -864,7 +864,7 @@ button:focus {
   padding: 0 16px 16px;
   word-wrap: break-word;
   line-height: 1.8;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .k-main .details .article .content::after,
@@ -1066,7 +1066,7 @@ button:focus {
   overflow: auto;
   width: 100%;
   table-layout: fixed;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .k-main .details .article .content table th,
