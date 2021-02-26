@@ -46,7 +46,8 @@ function theme_autoload()
             wp_enqueue_style('fontawesome', ASSET_PATH . '/assets/css/fontawesome.min.css', array(), '5.13.0');
         }
         wp_enqueue_style('kratos', ASSET_PATH . '/assets/css/kratos.min.css', array(), THEME_VERSION);
-        $admin_bar_css = "
+        if (kratos_option('g_adminbar', true)) {
+            $admin_bar_css = "
         @media screen and (max-width: 782px) {
             .k-nav{
                 padding-top: 54px;
@@ -58,8 +59,9 @@ function theme_autoload()
             }
         }
         ";
-        if (current_user_can('level_10')) {
-            wp_add_inline_style('kratos', $admin_bar_css);
+            if (current_user_can('level_10')) {
+                wp_add_inline_style('kratos', $admin_bar_css);
+            }
         }
         wp_enqueue_style('custom', get_template_directory_uri() . '/custom/custom.css', array(), THEME_VERSION);
         // js

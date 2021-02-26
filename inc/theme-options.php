@@ -73,6 +73,14 @@ function kratos_options()
     );
 
     $options[] = array(
+        'name' => __('前台管理员导航', 'kratos'),
+        'desc' => __('开启前台管理员导航', 'kratos'),
+        'std' => '1',
+        'id' => 'g_adminbar',
+        'type' => 'checkbox',
+    );
+
+    $options[] = array(
         'name' => __('CSS 动画库', 'kratos'),
         'desc' => __('开启 animate.css 效果', 'kratos'),
         'std' => '0',
@@ -185,6 +193,14 @@ function kratos_options()
         'id' => 'g_404',
         'std' => ASSET_PATH . '/assets/img/404.jpg',
         'type' => 'upload',
+    );
+
+    $options[] = array(
+        'name' => __('侧边栏后台入口', 'kratos'),
+        'desc' => __('开启小工具个人简介头像进入后台功能', 'kratos'),
+        'std' => '1',
+        'id' => 'g_login',
+        'type' => 'checkbox',
     );
 
     $options[] = array(
