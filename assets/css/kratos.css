@@ -201,6 +201,7 @@ button:focus {
 
 .k-nav .navbar-brand img {
   width: 168px;
+  max-height: 40px;
 }
 
 .k-nav .navbar-brand h1 {
@@ -410,6 +411,11 @@ button:focus {
     font-size: 19px;
   }
 
+  .k-nav .navbar-brand img {
+    max-width: 140px;
+    max-height: 30px;
+  }
+  
   .navbar-light .navbar-nav .nav-link {
     font-size: 16px;
   }
