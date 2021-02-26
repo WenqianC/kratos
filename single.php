@@ -158,7 +158,7 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
                             </div>
                             <div class="tool float-right d-none d-lg-block">
                                 <div data-toggle="tooltip" data-html="true" data-original-title="<?php _e('最后更新：','kratos'); the_modified_date( 'Y-m-d H:i' ) ?>">
-                                    <span><?php _e('最后更新：','kratos'); ?><?php the_modified_date('Y年m月d日'); ?></span>
+                                    <span><?php _e('最后更新：','kratos'); ?><?php the_modified_date(); ?></span>
                                 </div>
                             </div>
                         </div>
