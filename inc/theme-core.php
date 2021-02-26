@@ -202,3 +202,46 @@ if (kratos_option('g_removeimgsize', false)) {
     }
     add_filter('intermediate_image_sizes_advanced', 'remove_default_images');
 }
+
+// 媒体文件使用 md5 值重命名，指定文件前缀
+add_filter('wp_handle_upload_prefilter', 'custom_upload_filter');
+
+function custom_upload_filter($file)
+{
+    $info = pathinfo($file['name']);
+
+    $ext = '.' . $info['extension'];
+
+    $prdfix = kratos_option('g_renameother_prdfix', '') . '-';
+
+    $img_mimes = array('jpg', 'jpeg', 'jpe', 'gif', 'png', 'bmp', 'webp', 'svg');
+
+    $str = kratos_option('g_renameother_mime', '');
+    $arr = explode("|", $str);
+    $arr = array_filter($arr);
+
+    foreach ($arr as $value) {
+        $compressed_mimes[] = $value;
+    }
+
+    if (kratos_option('g_renameimg', false)) {
+        foreach ($img_mimes as $img_mime) {
+            if ($info['extension'] == $img_mime) {
+                $charid = strtolower(md5($file['name']));
+                $hyphen = chr(45);
+                $uuid = substr($charid, 0, 8) . $hyphen . substr($charid, 8, 4) . $hyphen . substr($charid, 12, 4) . $hyphen . substr($charid, 16, 4) . $hyphen . substr($charid, 20, 12);
+                $file['name'] = $uuid . $ext;
+            }
+        }
+    }
+
+    if (kratos_option('g_renameother', false)) {
+        foreach ($compressed_mimes as $compressed_mime) {
+            if ($info['extension'] == $compressed_mime) {
+                $file['name'] = $prdfix . $file['name'];
+            }
+        }
+    }
+
+    return $file;
+}
