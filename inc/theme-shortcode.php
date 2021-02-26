@@ -44,10 +44,7 @@ add_shortcode('mark', 'nrmark');
 
 function bilibili($atts, $content = null, $code = "")
 {
-    extract(shortcode_atts(array("cid" => 'cid'), $atts));
-    $return = '<div class="video-container"><iframe src="//player.bilibili.com/player.html?cid=';
-    $return .= $cid;
-    $return .= '&aid=';
+    $return = '<div class="video-container"><iframe src="//player.bilibili.com/player.html?bvid=';
     $return .= $content;
     $return .= '&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe></div>';
     return $return;

@@ -85,8 +85,7 @@
                 title: '哔哩哔哩',
                 image: url + '/images/bilibili.png',
                 onclick: function () {
-                    ed.selection.setContent('[bilibili cid=""]' + ed.selection.getContent() + '[/bilibili]')
-                }
+                    ed.selection.setContent('[bilibili]' + ed.selection.getContent() + '[/bilibili]')                }
             })
         },
         createControl: function (n, cm) {
