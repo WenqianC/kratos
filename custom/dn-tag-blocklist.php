@@ -55,6 +55,12 @@ function dn_render_blocklist_page() {
         function addTag() {
             var newTag = $.trim($('#dn-new-tag-input').val());
             if (newTag === '') return;
+            try {
+                new RegExp(newTag, 'i');
+            } catch (err) {
+                $('#dn-tag-feedback').text('屏蔽词不是有效正则，请检查括号、方括号等符号。');
+                return;
+            }
             $('#dn-tag-feedback').text('处理中...');
             $.post(ajaxurl, {
                 action: 'dn_add_blocked_tag',
@@ -89,11 +95,13 @@ function dn_render_blocklist_page() {
 add_action('wp_ajax_dn_add_blocked_tag', function() {
     check_ajax_referer('dn_tag_nonce', 'nonce');
     $user_id = get_current_user_id();
-    $new_tag = sanitize_text_field($_POST['tag']);
+    $new_tag = isset($_POST['tag']) ? sanitize_text_field(wp_unslash($_POST['tag'])) : '';
     $current_tags = get_user_meta($user_id, 'dn_blocked_tags', true) ?: [];
-    
+
+    if ($new_tag === '') wp_send_json_error('屏蔽词不能为空。');
+    if (mb_strlen($new_tag, 'UTF-8') > 50) wp_send_json_error('屏蔽词不能超过 50 个字。');
     if (count($current_tags) >= 10) wp_send_json_error('额度已满：最多只能添加 10 个屏蔽词。');
-    if (in_array($new_tag, $current_tags)) wp_send_json_error('该屏蔽词已存在。');
+    if (in_array($new_tag, $current_tags, true)) wp_send_json_error('该屏蔽词已存在。');
     
     $current_tags[] = $new_tag;
     update_user_meta($user_id, 'dn_blocked_tags', $current_tags);
@@ -103,7 +111,7 @@ add_action('wp_ajax_dn_add_blocked_tag', function() {
 add_action('wp_ajax_dn_delete_blocked_tag', function() {
     check_ajax_referer('dn_tag_nonce', 'nonce');
     $user_id = get_current_user_id();
-    $tag_to_delete = $_POST['tag'];
+    $tag_to_delete = isset($_POST['tag']) ? sanitize_text_field(wp_unslash($_POST['tag'])) : '';
     $current_tags = get_user_meta($user_id, 'dn_blocked_tags', true) ?: [];
     
     $current_tags = array_filter($current_tags, function($v) use ($tag_to_delete) { return $v !== $tag_to_delete; });
@@ -117,7 +125,8 @@ add_action('wp_ajax_dn_delete_blocked_tag', function() {
 add_action('wp_head', function() {
     if ( ! is_admin() && is_user_logged_in() ) {
         $tags = get_user_meta(get_current_user_id(), 'dn_blocked_tags', true) ?: [];
-        echo '<script type="text/javascript">window.dn_blocked_tags = ' . json_encode($tags) . ';</script>';
+        $tags = is_array($tags) ? array_values($tags) : [];
+        echo '<script type="text/javascript">window.dn_blocked_tags = ' . wp_json_encode($tags) . ';</script>';
     }
 });
 
@@ -129,9 +138,13 @@ add_action('wp_footer', function() {
             if (typeof window.dn_blocked_tags === 'undefined' || window.dn_blocked_tags.length === 0) return;
 
             var blockedCount = 0;
-            var regexList = window.dn_blocked_tags.map(function(tagStr) {
-                return new RegExp(tagStr, 'i');
+            var regexList = [];
+            window.dn_blocked_tags.forEach(function(tagStr) {
+                try {
+                    regexList.push(new RegExp(tagStr, 'i'));
+                } catch (err) {}
             });
+            if (regexList.length === 0) return;
 
             var articles = document.querySelectorAll('.article-panel');
             
