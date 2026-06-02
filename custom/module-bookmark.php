@@ -103,7 +103,7 @@ add_action('wp_ajax_dn_toggle_bookmark', 'dn_toggle_bookmark_ajax');
 function dn_toggle_bookmark_ajax() {
     check_ajax_referer('dn_bookmark_nonce', 'security');
 
-    $post_id = intval($_POST['post_id']);
+    $post_id = isset($_POST['post_id']) ? absint(wp_unslash($_POST['post_id'])) : 0;
     $user_id = get_current_user_id();
 
     if (!$post_id || !$user_id) {
@@ -117,6 +117,10 @@ function dn_toggle_bookmark_ajax() {
         unset($bookmarks[$post_id]);
         $status = 'removed';
     } else {
+        if (!dn_user_can_read_bookmark_post($post_id)) {
+            wp_send_json_error('无权收藏该文章。');
+        }
+
         $bookmarks[$post_id] = current_time('timestamp');
         $status = 'added';
     }
@@ -158,6 +162,16 @@ function dn_get_bookmark_status_badge($status, $exists = true) {
         esc_attr($style['color']),
         esc_html($style['label'])
     );
+}
+
+function dn_user_can_read_bookmark_post($post_id) {
+    $post_id = absint($post_id);
+
+    if (!$post_id || !get_post($post_id)) {
+        return false;
+    }
+
+    return current_user_can('read_post', $post_id);
 }
 
 /**
@@ -220,6 +234,11 @@ function dn_render_bookmarks_page() {
         // 构建一个包含“彻底删除”数据在内的完整数组，供自由排序
         $all_items = array();
         foreach ($bookmarks as $pid => $time) {
+            $pid = absint($pid);
+            if (!$pid) {
+                continue;
+            }
+
             $post_exists = isset($posts_indexed[$pid]);
             $p = $post_exists ? $posts_indexed[$pid] : null;
 
