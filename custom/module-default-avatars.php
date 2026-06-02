@@ -159,7 +159,9 @@ function dn_render_fixed_avatars_ui($user) {
 // =========================================================================
 
 // 定义一个统一常量，方便以后随时修改体积限制（100KB = 100 * 1024 字节）
-define('DN_AVATAR_MAX_BYTES', 100 * 1024);
+if (!defined('DN_AVATAR_MAX_BYTES')) {
+    define('DN_AVATAR_MAX_BYTES', 100 * 1024);
+}
 
 // 1. 前端 UI 限制：动态修改弹窗里的文字，并限制正常浏览器上传
 add_filter('upload_size_limit', 'dn_restrict_avatar_upload_size');
