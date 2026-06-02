@@ -445,12 +445,14 @@ function wpdocs_save_meta_box( $post_id ) {
 }
 add_action( 'save_post', 'wpdocs_save_meta_box' );
 
-//文章首行缩进 + 文本两端对齐 text-align: justify;
+
+// 文章首行缩进 + 文本两端对齐 text-align: justify;
 function Bing_text_indent($text){
-    $return=str_replace('<p', '<p style="text-indent:2em; text-align: justify;"',$text);
-    return$return;
+    $return=str_replace('<p', '<p style="text-indent:2em;"',$text);
+    return $return;
 }
 add_filter('the_content','Bing_text_indent');
+
 
 /**
  * Filter the upload size limit for non-administrators.
@@ -459,8 +461,8 @@ add_filter('the_content','Bing_text_indent');
  * @return int (maybe) Filtered size limit.
  */
 function filter_site_upload_size_limit( $size ) {
-    // Set the upload size limit to 64 MB for users lacking the 'manage_options' capability.
-    $size = 64 * 1024 * 1024;
+    // Set the upload size limit to 612 MB for users lacking the 'manage_options' capability.
+    $size = 256 * 1024 * 1024;
     return $size;
 }
 add_filter( 'upload_size_limit', 'filter_site_upload_size_limit', 20 );

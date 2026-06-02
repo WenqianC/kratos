@@ -7,11 +7,16 @@
  */
 ?>
 <div class="toolbar clearfix">
-    <div class="meta float-md-left">
-        <img src="<?php echo get_avatar_url(get_the_author_meta('ID')); ?>">
-        <p class="name"><?php echo get_the_author(); ?></p>
-		<p class="motto mb-0"><?php echo get_the_author_meta('description'); ?></p>
+	<div class="meta float-md-left">
+	    <img src="<?php echo get_avatar_url(get_the_author_meta('ID')); ?>">
+	    <p class="name">
+	        <a href="<?php echo get_author_posts_url(get_the_author_meta('ID')); ?>" style="color: #0073aa; text-decoration: none;">
+	            <?php echo get_the_author(); ?>
+	        </a>
+	    </p>
+	    <p class="motto mb-0"><?php echo get_the_author_meta('description'); ?></p>
 	</div>
+
 	<div class="share float-md-right text-center">
         <?php if(kratos_option('g_donate',false)){ ?>
 		    <a href="javascript:;" id="donate" class="btn btn-donate mr-3" role="button"><i class="kicon i-donate"></i> <?php _e('打赏','kratos'); ?></a>

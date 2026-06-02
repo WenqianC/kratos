@@ -39,10 +39,18 @@
             <span class="mr-2"><i class="kicon i-calendar"></i><?php echo get_the_date(); ?></span>
             <span class="mr-2"><i class="kicon i-comments"></i><?php comments_number('0', '1', '%'); _e('条评论', 'kratos'); ?></span>
         </span>
+        
+        <?php 
+        // 接入 custom.php 的总开关
+        // function_exists 的作用是防报错：万一你哪天不小心把 custom.php 删了，这里也不会导致网站崩溃
+        if ( function_exists('dn_is_show_post_stats') && dn_is_show_post_stats() ) : 
+        ?> 
         <span class="float-left d-block">
             <span class="mr-2"><i class="kicon i-hot"></i><?php echo get_post_views(); _e('点热度', 'kratos'); ?></span>
             <span class="mr-2"><i class="kicon i-good"></i><?php if (get_post_meta($post->ID, 'love', true)) {echo get_post_meta($post->ID, 'love', true);} else {echo '0';} _e('人点赞', 'kratos'); ?></span>
         </span>
+        <?php endif; ?>
+
         <span class="float-right">
             <a href="<?php the_permalink(); ?>"><?php _e('阅读全文', 'kratos'); ?><i class="kicon i-rightbutton"></i></a>
         </span>

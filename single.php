@@ -52,11 +52,25 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
                                 <?php if ( get_the_tags() ) { the_tags('', ',  ', ''); } else{ echo '<a>' . __( '暂无' , 'kratos') . '</a>';  }?>
                             </div>
                             <div class="meta">
-                                <span><?php _e('作者：'); echo get_the_author(); ?></span>
+                                <span>
+                                    <?php 
+                                    _e('作者：'); 
+
+                                    // 1. 获取作者 ID (这是纯数字，例如 1, 2, 5)
+                                    $author_id = get_the_author_meta('ID');
+
+                                    // 2. 使用 ID 获取该作者的归档页 URL
+                                    // WordPress 会自动处理成类似 dnforlife.com/author/nickname/ 或 dnforlife.com/?author=1 的格式
+                                    $author_link = get_author_posts_url($author_id);
+
+                                    // 3. 输出链接
+                                    echo '<a href="' . $author_link . '" target="_blank">' . get_the_author() . '</a>'; 
+                                    ?>
+                                </span>                                
                                 <span><?php echo get_the_date('Y年m月d日'); ?></span>
-                                <span ><?php echo get_post_views(); _e('点热度' , 'kratos'); ?></span>
+                               <?php if( function_exists('dn_is_show_post_stats') && dn_is_show_post_stats() ): ?> <span ><?php echo get_post_views(); _e('点热度' , 'kratos'); ?></span>
                                 <span><?php if (get_post_meta($post->ID, 'love', true)) { echo get_post_meta($post->ID, 'love', true); } else {echo '0'; } _e('人点赞', 'kratos'); ?></span>
-                                <span><?php comments_number('0', '1', '%'); _e('条评论', 'kratos'); ?></span>
+                                <?php endif; ?> <span><?php comments_number('0', '1', '%'); _e('条评论', 'kratos'); ?></span>
                                 <?php if (current_user_can('edit_posts')){ echo '<span>'; edit_post_link(__('编辑文章', 'kratos')); echo '</span>'; }; ?>
                             </div>
                         </div>
@@ -187,3 +201,4 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
     </div>
 </div>
 <?php get_footer(); ?>
+

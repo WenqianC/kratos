@@ -49,7 +49,8 @@ function keywords()
     } else {
         $keywords = single_tag_title('', false);
     }
-    return trim(strip_tags($keywords));
+    // 防止 strip_tags 接收到 null 导致弃用警告
+    return trim(strip_tags((string)$keywords));
 }
 
 // Description 配置

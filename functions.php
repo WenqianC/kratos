@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 模板函数
  * @author Seaton Jiang <seaton@vtrois.com>
