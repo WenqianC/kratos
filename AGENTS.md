@@ -1,0 +1,102 @@
+# AGENTS.md
+
+This file tells Codex how to work on this WordPress theme project.
+
+## Project
+
+- This repository is a customized WordPress theme based on `seatonjiang/kratos`.
+- The production theme path is expected to be `wp-content/themes/kratos/`.
+- Custom code is mainly under `custom/`.
+- Read `CUSTOM_MODULES.md` before changing custom modules.
+- Read `DEPLOYMENT.md` before preparing deployment files.
+
+## Server Constraints
+
+Production is small. Treat performance as a hard requirement.
+
+- Web server: 2 GB RAM, 2 vCPU, 60 GB SSD.
+- Media FTP server: 2 GB RAM, 2 vCPU, 60 GB SSD.
+- Database: MySQL 8.4.7, 40 GB SSD.
+- Front edge: free Lei Chi WAF, 2 GB RAM, 2 vCPU, 60 GB SSD.
+
+Do not add:
+
+- Unbounded `WP_Query`, `get_posts`, `get_users`, `get_comments`, or raw SQL.
+- Full-table scans during normal page views.
+- High-frequency AJAX polling.
+- Large file scans during requests.
+- Heavy cron jobs or batch tasks without explicit approval.
+
+Always use explicit limits such as `posts_per_page`, `number`, or SQL `LIMIT`.
+
+## Coding Rules
+
+- Prefer small, reversible changes.
+- Preserve existing behavior unless the user explicitly asks to change it.
+- Keep `custom/custom.php` as a module loader only.
+- Put new custom behavior in a focused `custom/module-*.php` file.
+- Do not silently remove user-intended title notes such as `[5.7更新第三章] [5.8更新第四章]`.
+- Do not modify `custom/module-reply-to-me.php` unless the user explicitly asks.
+- Do not broaden upload restrictions beyond the user's stated intent without asking.
+- Use WordPress escaping and sanitization APIs for output/input.
+- Avoid large refactors unrelated to the current task.
+
+## Ask First
+
+Ask the user before:
+
+- Changing user-facing behavior.
+- Changing permissions, privacy, registration, password reset, or upload policy.
+- Adding new dependencies, plugins, cron tasks, or background jobs.
+- Running destructive Git commands.
+- Merging upstream changes from `seatonjiang/kratos`.
+- Deploying or giving instructions that may replace many server files.
+
+## Verification
+
+For PHP changes, run syntax checks on changed PHP files:
+
+```bash
+php -d error_reporting='E_ALL & ~E_DEPRECATED' -l path/to/file.php
+```
+
+For broad PHP changes, run:
+
+```bash
+git ls-files '*.php' | xargs -n1 php -d error_reporting='E_ALL & ~E_DEPRECATED' -l
+```
+
+Always run:
+
+```bash
+git diff --check
+git status --short --branch
+```
+
+If deployment packaging is touched, run:
+
+```bash
+./scripts/build-deploy-package.sh
+```
+
+Then verify the package does not include development files:
+
+```bash
+zipinfo -1 dist/*.zip | rg '(^|/)\.git|(^|/)\.github|(^|/)\.idea|CUSTOM_MODULES|DEPLOYMENT|(^|/)scripts/|(^|/)dist/|DS_Store'
+```
+
+The `rg` command should return no package contents.
+
+## Git Workflow
+
+- Work from a feature branch, not directly on `master`, unless the user asks.
+- Commit focused changes with clear messages.
+- Push only after checks pass or after telling the user what could not be checked.
+- Do not merge into `master` without user approval.
+
+## Deployment
+
+- Prefer uploading only changed files for small updates.
+- For larger updates, build a clean package and upload its extracted `kratos/` contents.
+- Do not upload `.git`, `.github`, `.idea`, `dist`, scripts, or local metadata to production.
+- Never delete the production theme folder unless the user has a complete backup and explicitly approves.
