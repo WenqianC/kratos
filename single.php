@@ -64,7 +64,7 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
                                     $author_link = get_author_posts_url($author_id);
 
                                     // 3. 输出链接
-                                    echo '<a href="' . esc_url($author_link) . '" target="_blank">' . esc_html(get_the_author()) . '</a>'; 
+                                    echo '<a href="' . esc_url($author_link) . '" target="_blank">' . esc_html(get_the_author()) . '</a>';
                                     ?>
                                 </span>                                
                                 <span><?php echo get_the_date('Y年m月d日'); ?></span>
