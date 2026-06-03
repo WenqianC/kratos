@@ -18,8 +18,17 @@ Future code should avoid full-table scans, unbounded queries, heavy per-request 
 - `functions.php` loads `custom/custom.php`.
 - `inc/theme-core.php` enqueues `custom/custom.css` and `custom/custom.js` on the front end.
 - `custom/custom.php` loads:
+  - `custom/module-upload-policy.php`
+  - `custom/module-content-display.php`
+  - `custom/module-user-admin.php`
+  - `custom/module-auth-security.php`
+  - `custom/module-major-update.php`
+  - `custom/module-editor-rules.php`
+  - `custom/module-search-protection.php`
   - `custom/module-reply-to-me.php`
+  - `custom/module-comment-tools.php`
   - `custom/dn-tag-blocklist.php`
+  - `custom/module-media-library.php`
   - `custom/module-bookmark.php`
   - `custom/module-default-avatars.php`
 
@@ -27,75 +36,86 @@ Future code should avoid full-table scans, unbounded queries, heavy per-request 
 
 ### `custom/custom.php`
 
-Main custom entry file. It mixes several independent features:
+Main custom entry file. It only loads the feature modules in a stable order.
 
-- Upload and image behavior:
-  - Allows broad uploads with `ALLOW_UNFILTERED_UPLOADS`.
-  - Disables WordPress large-image scaling.
-  - Disables automatic EXIF rotation.
-  - Disables responsive `srcset` generation.
-  - Blocks SVG, SVGZ, HTML, HTM, XML, and XHTML uploads by extension, case-insensitively.
+Keep this file small. New custom behavior should usually live in a dedicated `custom/module-*.php` file.
 
-- Admin UI adjustments:
-  - Hides selected Advanced Post Types Order controls for editor/author roles.
-  - Removes the author metabox from post editing.
-  - Replaces the delete-user reassignment dropdown with a numeric user ID input to avoid a huge user dropdown.
+### `custom/module-upload-policy.php`
 
-- Login and user list tracking:
-  - Records last login time and IP in user meta.
-  - Adds last login time, last login IP, and registration time columns to the Users list.
-  - Allows IP search on the Users list.
+Upload and image policy:
 
-  Performance note: normal login recording is light. IP search uses user meta queries and should be used as an admin tool, not as a high-frequency workflow.
+- Allows broad uploads with `ALLOW_UNFILTERED_UPLOADS`.
+- Disables WordPress large-image scaling.
+- Disables automatic EXIF rotation.
+- Disables responsive `srcset` generation.
+- Blocks SVG, SVGZ, HTML, HTM, XML, and XHTML uploads by extension, case-insensitively.
 
-- Registration and lost-password verification:
-  - Adds custom proof questions to registration and lost-password forms.
-  - Validates the submitted answer.
+Performance note: upload checks only run during uploads. They do not add normal page-view load.
 
-  Maintenance note: current behavior works for normal form submissions. If hardening is needed later, sanitize and type-check `$_POST['proof']` before string operations.
+### `custom/module-content-display.php`
 
-- Major update workflow:
-  - Adds a side metabox to published posts.
-  - When checked, requires a 4-15 character note.
-  - Resets the post publish time to now.
-  - Appends the note to the title as `[note]`.
+Front-end display helpers:
 
-  Intended behavior: old bracketed notes are not removed automatically. Authors can manually edit titles such as `[5.7更新第三章] [5.8更新第四章]`.
+- Applies `make_clickable` to post content.
+- Defines `dn_is_show_post_stats()`.
+- Used by templates to show heat/likes only to users who can edit the current post.
 
-- Search and anti-scraping controls:
-  - Removes `post_content` and `post_excerpt` from non-admin search SQL.
-  - Blocks guest search with a 403 page.
-  - Caps non-admin queries requesting more than 50 posts, or all posts, down to 20 posts.
+### `custom/module-user-admin.php`
 
-  Performance note: this protects the small database server from expensive searches and large list requests. Compatibility note: it can also affect non-admin plugin/API queries that legitimately ask for more than 50 posts.
+Admin user tools:
 
-- Email and account safety:
-  - Appends a custom notice to all WordPress mail.
-  - Adds request IP information to password reset mail.
-  - Blocks selected sensitive username keywords at registration.
-  - Disables front-end password reset for administrator accounts and a specific protected account.
+- Hides selected Advanced Post Types Order controls for editor/author roles.
+- Records last login time and IP in user meta.
+- Adds last login time, last login IP, and registration time columns to the Users list.
+- Allows IP search on the Users list.
+- Replaces the delete-user reassignment dropdown with a numeric user ID input to avoid a huge user dropdown.
 
-- Post editor rules:
-  - Adds a title-format notice under the post title.
-  - Changes tag input helper text.
-  - Blocks post submission if no tag is present in the classic editor form.
+Performance note: normal login recording is light. IP search uses user meta queries and should be used as an admin tool, not as a high-frequency workflow.
 
-- Comment and front-end interaction:
-  - Removes Kratos comment notification hooks.
-  - Forces formatted paste in wpDiscuz comment fields to plain text.
-  - Hides email/IP display for non-admins in the comments admin screen using CSS.
+### `custom/module-auth-security.php`
 
-  Privacy note: the email/IP hiding is cosmetic CSS. It hides values visually but does not remove them from the underlying admin page data.
+Registration, lost-password, mail, and account safety:
 
-- Media library defaults:
-  - Redirects the Media Library to "mine" by default.
-  - Sets the Add Media modal to current-user attachments before the first AJAX request.
+- Adds custom proof questions to registration and lost-password forms.
+- Validates the submitted answer.
+- Appends a custom notice to all WordPress mail.
+- Adds request IP information to password reset mail.
+- Blocks selected sensitive username keywords at registration.
+- Disables front-end password reset for administrator accounts and a specific protected account.
 
-  Performance note: this is intentionally server-friendly for large media libraries.
+Maintenance note: current behavior works for normal form submissions. If hardening is needed later, sanitize and type-check `$_POST['proof']` before string operations.
 
-- Post stats visibility:
-  - Defines `dn_is_show_post_stats()`.
-  - Used by templates to show heat/likes only to users who can edit the current post.
+### `custom/module-major-update.php`
+
+Major update workflow:
+
+- Adds a side metabox to published posts.
+- When checked, requires a 4-15 character note.
+- Resets the post publish time to now.
+- Appends the note to the title as `[note]`.
+
+Intended behavior: old bracketed notes are not removed automatically. Authors can manually edit titles such as `[5.7更新第三章] [5.8更新第四章]`.
+
+### `custom/module-editor-rules.php`
+
+Post editor rules:
+
+- Removes the author metabox from post editing.
+- Adds a title-format notice under the post title.
+- Changes tag input helper text.
+- Blocks post submission if no tag is present in the classic editor form.
+
+### `custom/module-search-protection.php`
+
+Search and anti-scraping controls:
+
+- Removes `post_content` and `post_excerpt` from non-admin search SQL.
+- Blocks guest search with a 403 page.
+- Caps non-admin queries requesting more than 50 posts, or all posts, down to 20 posts.
+
+Performance note: this protects the small database server from expensive searches and large list requests.
+
+Compatibility note: it can also affect non-admin plugin/API queries that legitimately ask for more than 50 posts.
 
 ### `custom/module-reply-to-me.php`
 
@@ -113,6 +133,16 @@ Adds a custom comment-management experience:
 Performance note: the module avoids expensive top-bar count work, but the replies/count queries still touch the comments table and use subqueries. It is acceptable for moderate comment volume. If comment volume grows large, this should be the first comment module to profile.
 
 Maintenance note: non-moderator comment isolation currently targets selected comment statuses. Default/all/approved behavior should be reviewed carefully before changing permissions.
+
+### `custom/module-comment-tools.php`
+
+Comment and front-end interaction:
+
+- Removes Kratos comment notification hooks.
+- Forces formatted paste in wpDiscuz comment fields to plain text.
+- Hides email/IP display for non-admins in the comments admin screen using CSS.
+
+Privacy note: the email/IP hiding is cosmetic CSS. It hides values visually but does not remove them from the underlying admin page data.
 
 ### `custom/dn-tag-blocklist.php`
 
@@ -134,6 +164,15 @@ Template dependency:
 - Article cards must keep `.article-panel`.
 - Tag links must remain under `.tags a`.
 - Pagination notice expects `.paginations` when present.
+
+### `custom/module-media-library.php`
+
+Media library defaults:
+
+- Redirects the Media Library to "mine" by default.
+- Sets the Add Media modal to current-user attachments before the first AJAX request.
+
+Performance note: this is intentionally server-friendly for large media libraries.
 
 ### `custom/module-bookmark.php`
 
@@ -199,9 +238,9 @@ The following non-custom files depend on or support custom behavior:
 
 ## Current Watch List
 
-- `custom/custom.php`: proof input handling can be hardened later with `wp_unslash()`, `sanitize_text_field()`, `is_string()`, and `mb_strtolower()`.
-- `custom/custom.php`: `force_strict_posts_limit_for_bots()` is server-friendly, but broad. Review if a future feature needs non-admin queries over 50 posts.
-- `custom/custom.php`: comment email/IP hiding is visual only.
+- `custom/module-auth-security.php`: proof input handling can be hardened later with `wp_unslash()`, `sanitize_text_field()`, `is_string()`, and `mb_strtolower()`.
+- `custom/module-search-protection.php`: `force_strict_posts_limit_for_bots()` is server-friendly, but broad. Review if a future feature needs non-admin queries over 50 posts.
+- `custom/module-comment-tools.php`: comment email/IP hiding is visual only.
 - `custom/module-reply-to-me.php`: comment SQL should be profiled if comment volume grows.
 - `custom/module-bookmark.php`: bookmark admin list should be paged at query level if bookmark counts become large.
 - `custom/module-default-avatars.php`: avatar upload limit detection can be made more reliable if needed.
