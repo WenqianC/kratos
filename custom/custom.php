@@ -469,6 +469,17 @@ function reset_publish_date_and_title_on_major_update($data, $postarr)
 
     // 只有勾选了复选框才执行
     if (isset($_POST['is_major_update']) && $_POST['is_major_update'] == '1') {
+        if (! isset($_POST['major_update_note'])) {
+            return $data;
+        }
+
+        $note = sanitize_text_field($_POST['major_update_note']);
+        $note_length = mb_strlen($note, 'UTF-8');
+
+        // 后端同样执行 4-15 字规则，避免前端脚本未触发时误改发布时间/标题。
+        if ($note_length < 4 || $note_length > 15) {
+            return $data;
+        }
 
         // 1. 修改时间
         $current_time = current_time('mysql');
@@ -477,13 +488,7 @@ function reset_publish_date_and_title_on_major_update($data, $postarr)
         $data['post_date_gmt'] = $current_time_gmt;
 
         // 2. 修改标题
-        if (isset($_POST['major_update_note'])) {
-            $note = sanitize_text_field($_POST['major_update_note']);
-            // 再次确保不为空（双重保险）
-            if (mb_strlen($note) >= 1) {
-                $data['post_title'] = $data['post_title'] . ' [' . $note . ']';
-            }
-        }
+        $data['post_title'] = $data['post_title'] . ' [' . $note . ']';
     }
 
     return $data;
@@ -684,6 +689,24 @@ function replace_reassign_user_dropdown_with_input($output) {
     
     // 如果是网站其他地方的普通下拉框，原样放行，不干预
     return $output;
+}
+
+
+/**
+ * ====================================================
+ * 禁止上传可能携带脚本的 SVG/HTML/XML 文件
+ * ====================================================
+ */
+add_filter('wp_handle_upload_prefilter', 'dn_block_scriptable_upload_types');
+function dn_block_scriptable_upload_types($file) {
+    $blocked_extensions = array('svg', 'svgz', 'html', 'htm', 'xml', 'xhtml');
+    $extension = strtolower(pathinfo(isset($file['name']) ? $file['name'] : '', PATHINFO_EXTENSION));
+
+    if (in_array($extension, $blocked_extensions, true)) {
+        $file['error'] = '出于安全考虑，本站禁止上传 SVG、HTML、XML 等可能包含脚本的文件。';
+    }
+
+    return $file;
 }
 
 

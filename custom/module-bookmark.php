@@ -103,7 +103,7 @@ add_action('wp_ajax_dn_toggle_bookmark', 'dn_toggle_bookmark_ajax');
 function dn_toggle_bookmark_ajax() {
     check_ajax_referer('dn_bookmark_nonce', 'security');
 
-    $post_id = intval($_POST['post_id']);
+    $post_id = isset($_POST['post_id']) ? absint(wp_unslash($_POST['post_id'])) : 0;
     $user_id = get_current_user_id();
 
     if (!$post_id || !$user_id) {
@@ -117,6 +117,10 @@ function dn_toggle_bookmark_ajax() {
         unset($bookmarks[$post_id]);
         $status = 'removed';
     } else {
+        if (!dn_user_can_read_bookmark_post($post_id)) {
+            wp_send_json_error('无权收藏该文章。');
+        }
+
         $bookmarks[$post_id] = current_time('timestamp');
         $status = 'added';
     }
@@ -154,10 +158,20 @@ function dn_get_bookmark_status_badge($status, $exists = true) {
 
     return sprintf(
         '<span style="background: %s; color: %s; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">%s</span>',
-        $style['bg'],
-        $style['color'],
-        $style['label']
+        esc_attr($style['bg']),
+        esc_attr($style['color']),
+        esc_html($style['label'])
     );
+}
+
+function dn_user_can_read_bookmark_post($post_id) {
+    $post_id = absint($post_id);
+
+    if (!$post_id || !get_post($post_id)) {
+        return false;
+    }
+
+    return current_user_can('read_post', $post_id);
 }
 
 /**
@@ -181,7 +195,12 @@ function dn_render_bookmarks_page() {
     $bookmarks = get_user_meta($user_id, 'dn_bookmarks', true);
     $bookmarks = is_array($bookmarks) ? $bookmarks : array();
 
-    $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'bookmark_time';
+    $orderby = isset($_GET['orderby']) ? sanitize_key($_GET['orderby']) : 'bookmark_time';
+    $allowed_orderby = array('author', 'post_date', 'bookmark_time');
+    if (!in_array($orderby, $allowed_orderby, true)) {
+        $orderby = 'bookmark_time';
+    }
+
     $order = isset($_GET['order']) && strtolower($_GET['order']) === 'asc' ? 'asc' : 'desc';
     $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
     $per_page = 15;
@@ -191,20 +210,20 @@ function dn_render_bookmarks_page() {
     $offset = ($paged - 1) * $per_page;
 
     $display_posts = array();
-    $post_ids = array_keys($bookmarks);
+    $post_ids = array_filter(array_map('intval', array_keys($bookmarks)));
 
     // 查询逻辑重构：统一查询所有状态的数据，并在 PHP 中组装排序
     if (!empty($post_ids)) {
         global $wpdb;
-        $ids_str = implode(',', array_map('intval', $post_ids));
+        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
         
         // 极速提取：一次性拉取涉及到的所有文章数据（不受状态限制）
-        $db_posts = $wpdb->get_results("
+        $db_posts = $wpdb->get_results($wpdb->prepare("
             SELECT p.ID, p.post_title, p.post_author, p.post_date, p.post_status, u.display_name AS author_name 
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->users} u ON p.post_author = u.ID
-            WHERE p.ID IN ($ids_str)
-        ");
+            WHERE p.ID IN ($placeholders)
+        ", $post_ids));
 
         // 构建哈希字典
         $posts_indexed = array();
@@ -215,6 +234,11 @@ function dn_render_bookmarks_page() {
         // 构建一个包含“彻底删除”数据在内的完整数组，供自由排序
         $all_items = array();
         foreach ($bookmarks as $pid => $time) {
+            $pid = absint($pid);
+            if (!$pid) {
+                continue;
+            }
+
             $post_exists = isset($posts_indexed[$pid]);
             $p = $post_exists ? $posts_indexed[$pid] : null;
 

@@ -8,13 +8,13 @@
 ?>
 <div class="toolbar clearfix">
 	<div class="meta float-md-left">
-	    <img src="<?php echo get_avatar_url(get_the_author_meta('ID')); ?>">
+	    <img src="<?php echo esc_url(get_avatar_url(get_the_author_meta('ID'))); ?>">
 	    <p class="name">
-	        <a href="<?php echo get_author_posts_url(get_the_author_meta('ID')); ?>" style="color: #0073aa; text-decoration: none;">
-	            <?php echo get_the_author(); ?>
+	        <a href="<?php echo esc_url(get_author_posts_url(get_the_author_meta('ID'))); ?>" style="color: #0073aa; text-decoration: none;">
+	            <?php echo esc_html(get_the_author()); ?>
 	        </a>
 	    </p>
-	    <p class="motto mb-0"><?php echo get_the_author_meta('description'); ?></p>
+	    <p class="motto mb-0"><?php echo esc_html(get_the_author_meta('description')); ?></p>
 	</div>
 
 	<div class="share float-md-right text-center">
