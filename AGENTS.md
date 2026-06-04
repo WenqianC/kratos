@@ -34,9 +34,11 @@ Always use explicit limits such as `posts_per_page`, `number`, or SQL `LIMIT`.
 - Prefer small, reversible changes.
 - Preserve existing behavior unless the user explicitly asks to change it.
 - Keep `custom/custom.php` as a module loader only.
+- Ask the user before changing any function/code behaviors.
 - Put new custom behavior in a focused `custom/module-*.php` file.
+- Ask the user before commenting-out code or disabled snippets.
+- Keep old disabled snippets in `custom/module-disabled-snippets.php` when they may be useful later.
 - Do not silently remove user-intended title notes such as `[5.7更新第三章] [5.8更新第四章]`.
-- Do not modify `custom/module-reply-to-me.php` unless the user explicitly asks.
 - Do not broaden upload restrictions beyond the user's stated intent without asking.
 - Use WordPress escaping and sanitization APIs for output/input.
 - Avoid large refactors unrelated to the current task.

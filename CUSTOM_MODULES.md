@@ -40,6 +40,15 @@ Main custom entry file. It only loads the feature modules in a stable order.
 
 Keep this file small. New custom behavior should usually live in a dedicated `custom/module-*.php` file.
 
+### `custom/module-disabled-snippets.php`
+
+Archive for disabled or occasional-use snippets.
+
+- This file is not loaded by `custom/custom.php`.
+- Snippets in this file do not affect runtime behavior.
+- Move code out of this file only after confirming with the site owner.
+- Use this file for old commented-out code that may be useful later.
+
 ### `custom/module-upload-policy.php`
 
 Upload and image policy:
