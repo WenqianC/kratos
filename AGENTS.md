@@ -84,7 +84,7 @@ If deployment packaging is touched, run:
 Then verify the package does not include development files:
 
 ```bash
-zipinfo -1 dist/*.zip | rg '(^|/)\.git|(^|/)\.github|(^|/)\.idea|CUSTOM_MODULES|DEPLOYMENT|(^|/)scripts/|(^|/)dist/|DS_Store'
+zipinfo -1 dist/*.zip | rg '(^|/)\.git|(^|/)\.github|(^|/)\.idea|AGENTS|CUSTOM_MODULES|DEPLOYMENT|module-disabled-snippets|(^|/)scripts/|(^|/)dist/|DS_Store'
 ```
 
 The `rg` command should return no package contents.

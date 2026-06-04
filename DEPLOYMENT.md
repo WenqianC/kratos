@@ -35,8 +35,10 @@ Do not upload these development files or folders to production:
 .DS_Store
 dist/
 scripts/
+AGENTS.md
 DEPLOYMENT.md
 CUSTOM_MODULES.md
+custom/module-disabled-snippets.php
 ```
 
 ## Before Deployment

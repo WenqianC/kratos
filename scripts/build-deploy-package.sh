@@ -32,8 +32,10 @@ git archive \
   ':(exclude).github' \
   ':(exclude).eslintignore' \
   ':(exclude).prettierignore' \
+  ':(exclude)AGENTS.md' \
   ':(exclude)CUSTOM_MODULES.md' \
   ':(exclude)DEPLOYMENT.md' \
+  ':(exclude)custom/module-disabled-snippets.php' \
   ':(exclude)scripts'
 
 echo "Created deployment package:"
