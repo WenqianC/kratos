@@ -6,7 +6,7 @@
  * @version 2020.03.14
  */
 ?>
-<div class="article-panel">
+<div class="article-panel" data-dn-author-id="<?php echo esc_attr(get_the_author_meta('ID')); ?>">
     <?php if (kratos_option('g_thumbnail',true)) { ?>
     <div class="a-thumb">
         <a href="<?php the_permalink(); ?>">
@@ -30,7 +30,7 @@
         </div>
     </div>
     <div class="a-meta">
-        <span class="float-left d-none d-md-block">
+        <span class="float-left">
             <div class="tags">
                 <span><?php _e('标签：' , 'kratos'); ?></span>
                 <?php if ( get_the_tags() ) { the_tags('', ',  ', ''); } else{ echo '<a>' . __( '暂无' , 'kratos') . '</a>';  }?>
