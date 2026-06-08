@@ -38,10 +38,11 @@ Always use explicit limits such as `posts_per_page`, `number`, or SQL `LIMIT`.
 - Put new custom behavior in a focused `custom/module-*.php` file.
 - Ask the user before commenting-out code or disabled snippets.
 - Keep old disabled snippets in `custom/module-disabled-snippets.php` when they may be useful later.
-- Do not silently remove user-intended title notes such as `[5.7更新第三章] [5.8更新第四章]`.
+- Do not silently change code/function behavior. If you think a certain part is weird, ask the user.
 - Do not broaden upload restrictions beyond the user's stated intent without asking.
 - Use WordPress escaping and sanitization APIs for output/input.
 - Avoid large refactors unrelated to the current task.
+- Always ask the user to test the code in server first before pushing commits.
 
 ## Ask First
 
