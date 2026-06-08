@@ -12,7 +12,7 @@ require_once __DIR__ . '/module-editor-rules.php';
 require_once __DIR__ . '/module-search-protection.php';
 require_once __DIR__ . '/module-reply-to-me.php';
 require_once __DIR__ . '/module-comment-tools.php';
-require_once __DIR__ . '/dn-tag-blocklist.php';
+require_once __DIR__ . '/module-blocklist.php';
 require_once __DIR__ . '/module-media-library.php';
 require_once __DIR__ . '/module-bookmark.php';
 require_once __DIR__ . '/module-default-avatars.php';

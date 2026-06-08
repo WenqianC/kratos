@@ -1,6 +1,6 @@
 # Custom Module Map
 
-Last updated: 2026-06-03
+Last updated: 2026-06-08
 
 This document describes the current custom code in this Kratos theme fork. It is a maintenance map, not a rewrite plan.
 
@@ -27,7 +27,7 @@ Future code should avoid full-table scans, unbounded queries, heavy per-request 
   - `custom/module-search-protection.php`
   - `custom/module-reply-to-me.php`
   - `custom/module-comment-tools.php`
-  - `custom/dn-tag-blocklist.php`
+  - `custom/module-blocklist.php`
   - `custom/module-media-library.php`
   - `custom/module-bookmark.php`
   - `custom/module-default-avatars.php`
@@ -153,24 +153,30 @@ Comment and front-end interaction:
 
 Privacy note: the email/IP hiding is cosmetic CSS. It hides values visually but does not remove them from the underlying admin page data.
 
-### `custom/dn-tag-blocklist.php`
+### `custom/module-blocklist.php`
 
-User-specific tag blocklist:
+User-specific blocklist for tags and authors:
 
-- Adds an admin menu page named "Tag屏蔽设置".
-- Stores each user's rules in user meta key `dn_blocked_tags`.
-- Allows up to 10 rules, 50 characters each.
-- Validates that each rule can compile as a JavaScript regex.
-- Injects the current user's rules into the front end.
-- On each front-end page, scans `.article-panel` items and their `.tags a` labels.
+- Adds an admin menu page named "屏蔽设置".
+- Stores each user's tag rules in user meta key `dn_blocked_tags`.
+- Stores each user's blocked authors in user meta key `dn_blocked_authors` as author user IDs only.
+- Allows up to 50 blocked authors.
+- Shows blocked author nicknames in the admin page. If an account was deleted, it shows a muted "原作者账号已删除" placeholder and still allows removal.
+- Protects author ID `48008` from being blocked.
+- Allows up to 10 tag rules, 50 characters each.
+- Validates that each tag rule can compile as a JavaScript regex.
+- Injects the current user's tag rules and blocked author IDs into the front end.
+- On each front-end page, scans `.article-panel` items, their `.tags a` labels, and their `data-dn-author-id` attribute.
 - Hides matching articles on the current page only.
-- Adds a temporary "show hidden articles" toggle near pagination.
+- Adds one temporary "show hidden articles" toggle near pagination.
+- Adds a single-post "屏蔽作者" link next to the author name for logged-in users.
 
 Performance note: no database-wide filtering is performed. Work is limited to logged-in users and the articles already rendered on the current page. This is friendly to the web and database servers.
 
 Template dependency:
 
 - Article cards must keep `.article-panel`.
+- Article cards must include `data-dn-author-id` for author blocking.
 - Tag links must remain under `.tags a`.
 - Pagination notice expects `.paginations` when present.
 
@@ -233,7 +239,7 @@ Use this only for small front-end behavior that truly belongs on every page. Pre
 The following non-custom files depend on or support custom behavior:
 
 - `pages/page-content.php`
-  - Provides `.article-panel` and `.tags a` used by the tag blocklist.
+  - Provides `.article-panel`, `data-dn-author-id`, and `.tags a` used by the blocklist.
   - Calls `dn_is_show_post_stats()` before displaying heat/likes.
   - Escapes author output.
 
@@ -242,6 +248,7 @@ The following non-custom files depend on or support custom behavior:
   - Escapes author avatar URL, author URL, author name, and author description.
 
 - `single.php`
+  - Adds the logged-in-only author block button next to the author name.
   - Calls `dn_is_show_post_stats()` before displaying heat/likes.
   - Outputs the author archive link.
 

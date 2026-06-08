@@ -57,14 +57,26 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
                                     _e('作者：'); 
 
                                     // 1. 获取作者 ID (这是纯数字，例如 1, 2, 5)
-                                    $author_id = get_the_author_meta('ID');
+                                    $author_id = absint(get_the_author_meta('ID'));
+                                    $author_name = get_the_author();
 
                                     // 2. 使用 ID 获取该作者的归档页 URL
                                     // WordPress 会自动处理成类似 dnforlife.com/author/nickname/ 或 dnforlife.com/?author=1 的格式
                                     $author_link = get_author_posts_url($author_id);
 
                                     // 3. 输出链接
-                                    echo '<a href="' . esc_url($author_link) . '" target="_blank">' . esc_html(get_the_author()) . '</a>';
+                                    echo '<a href="' . esc_url($author_link) . '" target="_blank">' . esc_html($author_name) . '</a>';
+
+                                    $has_author_blocklist = function_exists('dn_is_protected_author') && function_exists('dn_is_author_blocked');
+                                    $is_protected_author = $has_author_blocklist && dn_is_protected_author($author_id);
+                                    $is_author_blocked = $has_author_blocklist && dn_is_author_blocked($author_id);
+                                    if (is_user_logged_in() && $has_author_blocklist && !$is_protected_author) {
+                                        if ($is_author_blocked) {
+                                            echo '<span class="dn-author-blocked-label" style="margin-left:8px;color:#999;font-size:12px;">已屏蔽</span>';
+                                        } else {
+                                            echo '<a href="#" data-dn-block-author-btn data-author-id="' . esc_attr($author_id) . '" data-author-name="' . esc_attr($author_name) . '" style="margin-left:8px;color:#999;font-size:12px;text-decoration:none;">屏蔽作者</a>';
+                                        }
+                                    }
                                     ?>
                                 </span>                                
                                 <span><?php echo get_the_date('Y年m月d日'); ?></span>

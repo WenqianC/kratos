@@ -99,7 +99,7 @@ Check these pages and actions:
 - Media upload if upload logic changed.
 - Comments admin if comment logic changed.
 - "我的收藏" add/remove/list behavior if bookmark logic changed.
-- Tag blocklist settings and front-end hiding if blocklist logic changed.
+- Blocklist settings and front-end hiding if blocklist logic changed.
 
 Also watch server behavior briefly:
 
