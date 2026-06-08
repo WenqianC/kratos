@@ -30,7 +30,7 @@
         </div>
     </div>
     <div class="a-meta">
-        <span class="float-left d-none d-md-block">
+        <span class="float-left">
             <div class="tags">
                 <span><?php _e('标签：' , 'kratos'); ?></span>
                 <?php if ( get_the_tags() ) { the_tags('', ',  ', ''); } else{ echo '<a>' . __( '暂无' , 'kratos') . '</a>';  }?>
