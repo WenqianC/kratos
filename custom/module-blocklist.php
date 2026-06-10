@@ -162,7 +162,7 @@ function dn_render_blocklist_page() {
 
         <div class="dn-author-blocklist-section">
             <h2 class="dn-blocklist-module-title">作者屏蔽</h2>
-            <p class="description">从文章页点击“屏蔽作者”后，作者会出现在这里。您最多可以屏蔽50位作者。该作者将在列表中对您隐藏。</p>
+            <p class="description">从文章页点击“屏蔽作者”后，作者会出现在这里。您最多可以屏蔽50位作者。该作者将在列表中对您隐藏。请注意，屏蔽功能为单向屏蔽对方的文章（即不显示在您首页）。不能屏蔽对方的评论或阻止对方看到您的文章。</p>
 
             <h3 class="dn-blocklist-list-title">当前已屏蔽作者 (<span id="dn-author-count"><?php echo esc_html(count($current_author_ids)); ?></span>/<?php echo esc_html(dn_blocked_author_limit()); ?>)</h3>
             <?php if (empty($current_author_ids)): ?>
