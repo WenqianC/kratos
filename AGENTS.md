@@ -9,6 +9,7 @@ This file tells Codex how to work on this WordPress theme project.
 - Custom code is mainly under `custom/`.
 - Read `CUSTOM_MODULES.md` before changing custom modules.
 - Read `DEPLOYMENT.md` before preparing deployment files.
+- Read `docs/DECISIONS.md` when prior design decisions may matter.
 
 ## Server Constraints
 
@@ -34,15 +35,17 @@ Always use explicit limits such as `posts_per_page`, `number`, or SQL `LIMIT`.
 - Prefer small, reversible changes.
 - Preserve existing behavior unless the user explicitly asks to change it.
 - Keep `custom/custom.php` as a module loader only.
-- Ask the user before changing any function/code behaviors.
+- If code looks strange, ask the user before changing its behavior.
 - Put new custom behavior in a focused `custom/module-*.php` file.
 - Ask the user before commenting-out code or disabled snippets.
 - Keep old disabled snippets in `custom/module-disabled-snippets.php` when they may be useful later.
-- Do not silently change code/function behavior. If you think a certain part is weird, ask the user.
 - Do not broaden upload restrictions beyond the user's stated intent without asking.
 - Use WordPress escaping and sanitization APIs for output/input.
 - Avoid large refactors unrelated to the current task.
 - Always ask the user to test the code in server first before pushing commits.
+- Do not create or modify files outside this repository unless the user explicitly approves.
+- Put temporary local test scripts under `tests/tmp/` and make sure they are ignored by Git.
+- Record significant design decisions in `docs/DECISIONS.md` when useful.
 
 ## Ask First
 

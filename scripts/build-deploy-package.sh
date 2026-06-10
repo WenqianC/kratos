@@ -35,6 +35,7 @@ git archive \
   ':(exclude)AGENTS.md' \
   ':(exclude)CUSTOM_MODULES.md' \
   ':(exclude)DEPLOYMENT.md' \
+  ':(exclude)docs' \
   ':(exclude)custom/module-disabled-snippets.php' \
   ':(exclude)scripts'
 

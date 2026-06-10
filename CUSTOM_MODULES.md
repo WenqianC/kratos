@@ -1,17 +1,10 @@
 # Custom Module Map
 
-Last updated: 2026-06-08
+Last updated: 2026-06-10
 
 This document describes the current custom code in this Kratos theme fork. It is a maintenance map, not a rewrite plan.
 
-Server baseline for future changes:
-
-- Web server: 2 GB RAM, 2 vCPU, 60 GB SSD.
-- Media FTP server: 2 GB RAM, 2 vCPU, 60 GB SSD.
-- Database: MySQL 8.4.7, 40 GB SSD.
-- Front edge: free Lei Chi WAF, 2 GB RAM, 2 vCPU, 60 GB SSD.
-
-Future code should avoid full-table scans, unbounded queries, heavy per-request work, high-frequency AJAX, and large background jobs.
+Follow the performance and coding constraints in `AGENTS.md` when changing these modules.
 
 ## Loading Chain
 
@@ -260,13 +253,3 @@ The following non-custom files depend on or support custom behavior:
 - `custom/module-reply-to-me.php`: comment SQL should be profiled if comment volume grows.
 - `custom/module-bookmark.php`: bookmark admin list should be paged at query level if bookmark counts become large.
 - `custom/module-default-avatars.php`: avatar upload limit detection can be made more reliable if needed.
-
-## Future Coding Rules For This Project
-
-- Do not add unbounded `WP_Query`, `get_posts`, `get_users`, or direct SQL calls.
-- Always set a small `posts_per_page` or `LIMIT`.
-- Avoid doing file scans or remote requests during normal page views.
-- Avoid global `wp_footer` scripts unless they return early on most pages.
-- Prefer user-specific or short-lived caching for repeated count queries.
-- Treat admin pages as performance-sensitive too; the web server is small.
-- Keep production deployments free of `.git`, `.github`, and `.idea`.

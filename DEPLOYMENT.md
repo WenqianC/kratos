@@ -1,15 +1,10 @@
 # Deployment Guide
 
-Last updated: 2026-06-03
+Last updated: 2026-06-10
 
 This project is a WordPress theme. The production server is small, so deploy in small, reversible steps.
 
-Server baseline:
-
-- Web server: 2 GB RAM, 2 vCPU, 60 GB SSD.
-- Media FTP server: 2 GB RAM, 2 vCPU, 60 GB SSD.
-- Database: MySQL 8.4.7, 40 GB SSD.
-- Front edge: free Lei Chi WAF, 2 GB RAM, 2 vCPU, 60 GB SSD.
+See `AGENTS.md` for production server constraints.
 
 ## Recommended Current Method
 
@@ -38,6 +33,7 @@ scripts/
 AGENTS.md
 DEPLOYMENT.md
 CUSTOM_MODULES.md
+docs/
 custom/module-disabled-snippets.php
 ```
 
