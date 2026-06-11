@@ -11,22 +11,22 @@ function dn_get_visible_post_pages($total_pages)
 {
     $total_pages = max(1, (int) $total_pages);
 
-    if ($total_pages <= 10) {
+    if ($total_pages <= 7) {
         return range(1, $total_pages);
     }
 
-    return array_merge(range(1, 5), range($total_pages - 4, $total_pages));
+    return array_merge(range(1, 5), range($total_pages - 1, $total_pages));
 }
 
 function dn_get_hidden_post_pages($total_pages)
 {
     $total_pages = max(1, (int) $total_pages);
 
-    if ($total_pages <= 10) {
+    if ($total_pages <= 7) {
         return array();
     }
 
-    return range(6, $total_pages - 5);
+    return range(6, $total_pages - 2);
 }
 
 function dn_get_post_page_url($page_number, $post = null)
@@ -83,12 +83,12 @@ function dn_render_post_page_link($page_number, $label, $post)
     );
 }
 
-function dn_render_post_page_jump($hidden_pages, $current_page, $post)
+function dn_render_post_page_jump($total_pages, $current_page, $post)
 {
     echo '<span class="dn-post-page-jump">';
     echo '<select data-dn-page-select aria-label="' . esc_attr__('选择页码', 'kratos') . '">';
 
-    foreach ($hidden_pages as $page_number) {
+    foreach (range(1, $total_pages) as $page_number) {
         printf(
             '<option value="%s"%s>%s</option>',
             esc_url(dn_get_post_page_url($page_number, $post)),
@@ -123,7 +123,7 @@ function dn_render_post_pagination()
     $previous_visible_page = 0;
     foreach ($visible_pages as $page_number) {
         if ($hidden_pages && $previous_visible_page && $page_number > $previous_visible_page + 1) {
-            dn_render_post_page_jump($hidden_pages, $current_page, $post);
+            dn_render_post_page_jump($numpages, $current_page, $post);
         }
 
         if ($page_number === $current_page) {

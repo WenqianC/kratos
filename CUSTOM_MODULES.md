@@ -67,8 +67,8 @@ Front-end display helpers:
 
 Multipage post and page navigation:
 
-- Keeps direct page-number links to at most 10: the first 5 and last 5 pages.
-- Adds a page selector and jump button for omitted middle pages.
+- Keeps direct page-number links to at most 7: the first 5 and last 2 pages.
+- Adds a page selector containing every page and selects the current page by default.
 - Generates preview pagination with the `page` query argument so scheduled and unpublished previews can change pages correctly.
 - Keeps the existing previous-page, next-page, and single-post top/bottom pagination positions.
 

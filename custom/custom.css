@@ -1,30 +1,31 @@
 .k-main .details .article .content .paginations .dn-post-page-jump {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     vertical-align: middle;
     cursor: default;
 }
 
 .k-main .details .article .content .dn-post-page-jump select,
 .k-main .details .article .content .dn-post-page-jump button {
-    height: 32px;
+    padding: 5px 12px;
     border: 1px solid #00a2ff;
-    background: #fff;
+    border-radius: 0;
+    background: #f0f8ff;
     color: #00a2ff;
     font-size: 14px;
-}
-
-.k-main .details .article .content .dn-post-page-jump select {
-    padding: 0 5px;
-}
-
-.k-main .details .article .content .dn-post-page-jump button {
-    padding: 0 10px;
+    line-height: 1.8;
     cursor: pointer;
 }
 
-.k-main .details .article .content .dn-post-page-jump button:hover {
+.k-main .details .article .content .dn-post-page-jump select {
+    padding-right: 6px;
+}
+
+.k-main .details .article .content .dn-post-page-jump select:hover,
+.k-main .details .article .content .dn-post-page-jump select:focus,
+.k-main .details .article .content .dn-post-page-jump button:hover,
+.k-main .details .article .content .dn-post-page-jump button:focus {
     background: #00a2ff;
     color: #fff;
 }
