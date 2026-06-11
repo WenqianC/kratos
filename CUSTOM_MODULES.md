@@ -1,6 +1,6 @@
 # Custom Module Map
 
-Last updated: 2026-06-10
+Last updated: 2026-06-11
 
 This document describes the current custom code in this Kratos theme fork. It is a maintenance map, not a rewrite plan.
 
@@ -14,6 +14,7 @@ Follow the performance and coding constraints in `AGENTS.md` when changing these
   - `custom/module-upload-policy.php`
   - `custom/module-content-display.php`
   - `custom/module-post-pagination.php`
+  - `custom/module-post-list-filter.php`
   - `custom/module-user-admin.php`
   - `custom/module-auth-security.php`
   - `custom/module-major-update.php`
@@ -73,6 +74,18 @@ Multipage post and page navigation:
 - Keeps the existing previous-page, next-page, and single-post top/bottom pagination positions.
 
 Performance note: pagination uses WordPress's existing in-request page count and adds no queries or AJAX requests.
+
+### `custom/module-post-list-filter.php`
+
+Admin post-list author scope:
+
+- Applies only to the Published, Draft, and Trash tabs for posts.
+- Defaults those tabs to the current user's posts.
+- Adds a "我的文章 / 全部文章" dropdown to the existing post-list filters.
+- Keeps the current status tab when filtering by an author-column link.
+- "全部文章" preserves the site's existing permission rules and does not grant access to additional content.
+
+Performance note: the default view adds an `author` condition to the existing main post query. A small inline admin script updates only the author links already rendered on the page. It adds no separate queries, user lookups, AJAX requests, or counts.
 
 ### `custom/module-user-admin.php`
 

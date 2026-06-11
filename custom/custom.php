@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/module-upload-policy.php';
 require_once __DIR__ . '/module-content-display.php';
 require_once __DIR__ . '/module-post-pagination.php';
+require_once __DIR__ . '/module-post-list-filter.php';
 require_once __DIR__ . '/module-user-admin.php';
 require_once __DIR__ . '/module-auth-security.php';
 require_once __DIR__ . '/module-major-update.php';
