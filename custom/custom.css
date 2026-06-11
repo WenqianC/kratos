@@ -1,0 +1,30 @@
+.k-main .details .article .content .paginations .dn-post-page-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+    cursor: default;
+}
+
+.k-main .details .article .content .dn-post-page-jump select,
+.k-main .details .article .content .dn-post-page-jump button {
+    height: 32px;
+    border: 1px solid #00a2ff;
+    background: #fff;
+    color: #00a2ff;
+    font-size: 14px;
+}
+
+.k-main .details .article .content .dn-post-page-jump select {
+    padding: 0 5px;
+}
+
+.k-main .details .article .content .dn-post-page-jump button {
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.k-main .details .article .content .dn-post-page-jump button:hover {
+    background: #00a2ff;
+    color: #fff;
+}

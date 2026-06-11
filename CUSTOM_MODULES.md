@@ -13,6 +13,7 @@ Follow the performance and coding constraints in `AGENTS.md` when changing these
 - `custom/custom.php` loads:
   - `custom/module-upload-policy.php`
   - `custom/module-content-display.php`
+  - `custom/module-post-pagination.php`
   - `custom/module-user-admin.php`
   - `custom/module-auth-security.php`
   - `custom/module-major-update.php`
@@ -61,6 +62,17 @@ Front-end display helpers:
 - Applies `make_clickable` to post content.
 - Defines `dn_is_show_post_stats()`.
 - Used by templates to show heat/likes only to users who can edit the current post.
+
+### `custom/module-post-pagination.php`
+
+Multipage post and page navigation:
+
+- Keeps direct page-number links to at most 10: the first 5 and last 5 pages.
+- Adds a page selector and jump button for omitted middle pages.
+- Generates preview pagination with the `page` query argument so scheduled and unpublished previews can change pages correctly.
+- Keeps the existing previous-page, next-page, and single-post top/bottom pagination positions.
+
+Performance note: pagination uses WordPress's existing in-request page count and adds no queries or AJAX requests.
 
 ### `custom/module-user-admin.php`
 

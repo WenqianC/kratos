@@ -97,61 +97,9 @@ $select_col = $col_array[kratos_option('g_article_widgets', 'two_side')];
                                     echo '</a>';
                                 }
                             }
-                            wp_link_pages(
-                                array(
-                                    'before' => '<div class="paginations text-center">',
-                                    'after' => '',
-                                    'next_or_number' => 'next',
-                                    'previouspagelink' => __('<span>上一页</span>', 'kratos'),
-                                    'nextpagelink' => ''
-                                )
-                            );
-                            wp_link_pages(
-                                array(
-                                    'before' => '',
-                                    'after' => '',
-                                    'next_or_number' => 'number',
-                                    'link_before' =>'<span>',
-                                    'link_after'=>'</span>'
-                                )
-                            );
-                            wp_link_pages(
-                                array(
-                                    'before' => '',
-                                    'after' => '</div>',
-                                    'next_or_number' => 'next',
-                                    'previouspagelink' => '',
-                                    'nextpagelink' => __('<span>下一页</span>', 'kratos')
-                                )
-                            );
+                            dn_render_post_pagination();
                             the_content();
-                            wp_link_pages(
-                                array(
-                                    'before' => '<div class="paginations text-center">',
-                                    'after' => '',
-                                    'next_or_number' => 'next',
-                                    'previouspagelink' => __('<span>上一页</span>', 'kratos'),
-                                    'nextpagelink' => ''
-                                )
-                            );
-                            wp_link_pages(
-                                array(
-                                    'before' => '',
-                                    'after' => '',
-                                    'next_or_number' => 'number',
-                                    'link_before' =>'<span>',
-                                    'link_after'=>'</span>'
-                                )
-                            );
-                            wp_link_pages(
-                                array(
-                                    'before' => '',
-                                    'after' => '</div>',
-                                    'next_or_number' => 'next',
-                                    'previouspagelink' => '',
-                                    'nextpagelink' => __('<span>下一页</span>', 'kratos')
-                                )
-                            );
+                            dn_render_post_pagination();
                             if(kratos_option('s_singledown',false)){
                                 if(kratos_option('s_singledown_links')){
                                     echo '<a href="'. kratos_option('s_singledown_links') .'" target="_blank" rel="noreferrer">';
