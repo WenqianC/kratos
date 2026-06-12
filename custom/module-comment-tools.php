@@ -22,6 +22,26 @@ function dn_remove_unwanted_comment_bulk_actions($actions) {
     return $actions;
 }
 
+add_action('admin_footer-index.php', 'dn_confirm_comment_trash');
+add_action('admin_footer-edit-comments.php', 'dn_confirm_comment_trash');
+function dn_confirm_comment_trash() {
+    ?>
+    <script type="text/javascript">
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest) return;
+
+        var trashLink = event.target.closest('a[href*="action=trashcomment"]');
+        if (!trashLink) return;
+
+        if (!window.confirm('确定要将这条评论移至回收站吗？')) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+    }, true);
+    </script>
+    <?php
+}
+
 add_action('wp_footer', 'dn_force_plain_text_paste_in_comments', 99);
 function dn_force_plain_text_paste_in_comments() {
     if ( ! is_singular() ) return;

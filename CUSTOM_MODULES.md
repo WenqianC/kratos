@@ -171,6 +171,7 @@ Comment and front-end interaction:
 - Removes Kratos comment notification hooks.
 - Forces formatted paste in front-end wpDiscuz main-comment and reply fields to plain text.
 - Removes the unapprove and spam actions from editable comment rows and the comments bulk-action menus.
+- Confirms before moving an individual comment to Trash from the Dashboard or comments screen.
 - Hides email/IP display for non-admins in the comments admin screen using CSS.
 
 Privacy note: the email/IP hiding is cosmetic CSS. It hides values visually but does not remove them from the underlying admin page data.
