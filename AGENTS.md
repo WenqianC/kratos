@@ -97,6 +97,11 @@ The `rg` command should return no package contents.
 
 - Work from a feature branch, not directly on `master`, unless the user asks.
 - Commit focused changes with clear messages.
+- Write every commit title and description in Chinese.
+- Every commit description must include these three numbered sections:
+  - `1. 简要描述`：概括本次提交的目的和涉及范围。
+  - `2. 修改前的表现`：说明修改前的行为、问题或限制。
+  - `3. 修改后的表现`：说明修改后的行为，以及明确保留不变的重要行为。
 - Push only after checks pass or after telling the user what could not be checked.
 - Do not merge into `master` without user approval.
 

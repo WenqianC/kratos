@@ -30,7 +30,7 @@ function dn_force_plain_text_paste_in_comments() {
     document.addEventListener('DOMContentLoaded', function() {
         document.body.addEventListener('paste', function(e) {
             var target = e.target;
-            var isInWpDiscuz = target.closest('.wpd-form-wrap') && (target.closest('.ql-editor') || target.tagName.toLowerCase() === 'textarea');
+            var isInWpDiscuz = target.closest('#wpdcom') && (target.closest('.ql-editor') || target.matches('textarea[name="wc_comment"]'));
 
             if (isInWpDiscuz) {
                 var clipboardData = e.clipboardData || window.clipboardData;

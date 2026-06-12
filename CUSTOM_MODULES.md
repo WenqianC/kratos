@@ -169,7 +169,7 @@ Maintenance note: non-moderator comment isolation currently targets selected com
 Comment and front-end interaction:
 
 - Removes Kratos comment notification hooks.
-- Forces formatted paste in wpDiscuz comment fields to plain text.
+- Forces formatted paste in front-end wpDiscuz main-comment and reply fields to plain text.
 - Removes the unapprove and spam actions from editable comment rows and the comments bulk-action menus.
 - Hides email/IP display for non-admins in the comments admin screen using CSS.
 

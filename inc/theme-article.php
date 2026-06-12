@@ -259,7 +259,14 @@ add_action('wp_ajax_ajax_comment', 'comment_callback');
 
 function comment_post($incoming_comment)
 {
-    $incoming_comment['comment_content'] = htmlspecialchars($incoming_comment['comment_content']);
+    $is_admin_reply = wp_doing_ajax()
+        && isset($_REQUEST['action'])
+        && $_REQUEST['action'] === 'replyto-comment';
+
+    if (!$is_admin_reply) {
+        $incoming_comment['comment_content'] = htmlspecialchars($incoming_comment['comment_content']);
+    }
+
     $incoming_comment['comment_content'] = str_replace("'", '&apos;', $incoming_comment['comment_content']);
     return ($incoming_comment);
 }
