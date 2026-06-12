@@ -38,17 +38,33 @@ function dn_get_user_replies_count() {
 // 2. 助手函数：获取用户自己特定状态的评论数
 // ----------------------------------------------------
 function dn_get_user_status_count($status) {
+    static $counts = null;
+
     global $wpdb;
     $user_id = get_current_user_id();
     if (!$user_id) return 0;
 
     $map = ['moderated' => '0', 'spam' => 'spam', 'trash' => 'trash'];
-    $db_status = isset($map[$status]) ? $map[$status] : '0';
+    if (!isset($map[$status])) return 0;
 
-    return (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$wpdb->comments} WHERE user_id = %d AND comment_approved = %s",
-        $user_id, $db_status
-    ));
+    if ($counts === null) {
+        $counts = array_fill_keys(array_values($map), 0);
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT comment_approved, COUNT(*) AS total
+             FROM {$wpdb->comments}
+             WHERE user_id = %d AND comment_approved IN ('0', 'spam', 'trash')
+             GROUP BY comment_approved",
+            $user_id
+        ));
+
+        foreach ($rows as $row) {
+            if (isset($counts[$row->comment_approved])) {
+                $counts[$row->comment_approved] = (int) $row->total;
+            }
+        }
+    }
+
+    return $counts[$map[$status]];
 }
 
 // ----------------------------------------------------
@@ -59,6 +75,8 @@ add_filter( 'views_edit-comments', 'dn_custom_integrated_comment_views', 999 );
 function dn_custom_integrated_comment_views( $views ) {
     $user_id = get_current_user_id();
     if ( ! $user_id ) return $views;
+
+    unset( $views['approved'] );
 
     $new_views = array();
 
@@ -99,12 +117,64 @@ function dn_custom_integrated_comment_views( $views ) {
 // ----------------------------------------------------
 // 4. 拦截数据库查询
 // ----------------------------------------------------
+add_action( 'manage_comments_nav', 'dn_preserve_comment_search_scope', 10, 2 );
+function dn_preserve_comment_search_scope( $comment_status, $which ) {
+    if ( $which !== 'top' ) {
+        return;
+    }
+
+    if ( isset( $_GET['reply_view'] ) && $_GET['reply_view'] === 'me' ) {
+        echo '<input type="hidden" name="reply_view" value="me">';
+    }
+
+    if ( $comment_status === 'mine' ) {
+        echo '<input type="hidden" name="user_id" value="' . esc_attr( get_current_user_id() ) . '">';
+    }
+}
+
+add_filter( 'comments_list_table_query_args', 'dn_mark_admin_comment_list_query' );
+function dn_mark_admin_comment_list_query( $args ) {
+    $args['dn_admin_comment_list'] = true;
+    $user_id = get_current_user_id();
+
+    if ( ! $user_id ) {
+        return $args;
+    }
+
+    $status = isset( $_REQUEST['comment_status'] ) ? $_REQUEST['comment_status'] : '';
+
+    if ( $status === 'mine' ) {
+        $args['user_id'] = $user_id;
+    }
+
+    if ( isset( $_GET['reply_view'] ) && $_GET['reply_view'] === 'me' ) {
+        $args['cache_domain'] = 'dn-replies-to-me-' . $user_id;
+    } elseif ( ! current_user_can( 'moderate_comments' ) ) {
+        if ( in_array( $status, ['moderated', 'spam', 'trash', '0'], true ) ) {
+            $args['cache_domain'] = 'dn-user-comment-status-' . $user_id . '-' . $status;
+        }
+    }
+
+    return $args;
+}
+
 add_filter( 'comments_clauses', 'dn_integrated_comment_queries', 10, 2 );
 
 function dn_integrated_comment_queries( $pieces, $query ) {
     global $wpdb;
     $user_id = get_current_user_id();
     if ( ! is_admin() || ! $user_id ) return $pieces;
+    if ( empty( $query->query_vars['dn_admin_comment_list'] ) ) return $pieces;
+
+    if ( ! current_user_can( 'moderate_comments' ) && ! empty( $query->query_vars['search'] ) ) {
+        $search = $query->query_vars['search'];
+        $default_columns = ['comment_author', 'comment_author_email', 'comment_author_url', 'comment_author_IP', 'comment_content'];
+        $visible_columns = ['comment_author', 'comment_content'];
+        $default_search = preg_replace( '/^\s*AND\s*/', '', $query->get_search_sql( $search, $default_columns ) );
+        $visible_search = preg_replace( '/^\s*AND\s*/', '', $query->get_search_sql( $search, $visible_columns ) );
+
+        $pieces['where'] = str_replace( $default_search, $visible_search, $pieces['where'] );
+    }
 
     if ( isset( $_GET['reply_view'] ) && $_GET['reply_view'] === 'me' ) {
         if ( strpos( $pieces['join'], $wpdb->posts ) === false ) {
@@ -189,6 +259,68 @@ function add_replies_to_me_dashboard_widget() {
     }
 }
 
+add_filter('comment_row_actions', 'dn_prioritize_native_dashboard_reply_action', 1001);
+function dn_prioritize_native_dashboard_reply_action($actions) {
+    global $pagenow;
+
+    if ($pagenow !== 'index.php' || !isset($actions['reply'])) {
+        return $actions;
+    }
+
+    $reply = $actions['reply'];
+    unset($actions['reply']);
+
+    return array('reply' => $reply) + $actions;
+}
+
+function dn_get_dashboard_reply_actions($comment) {
+    $comment_id = (int) $comment->comment_ID;
+    $post_id = (int) $comment->comment_post_ID;
+    $actions = array();
+
+    $can_edit_comment = current_user_can('edit_comment', $comment_id);
+
+    if ($can_edit_comment) {
+        if ($comment->comment_approved !== '1') {
+            $approve_url = wp_nonce_url(
+                admin_url("comment.php?action=approvecomment&p={$post_id}&c={$comment_id}"),
+                "approve-comment_{$comment_id}"
+            );
+            $actions['approve'] = '<a href="' . esc_url($approve_url) . '" aria-label="批准此评论">批准</a>';
+        }
+
+        $actions['edit'] = '<a href="' . esc_url(admin_url("comment.php?action=editcomment&c={$comment_id}")) . '" aria-label="编辑此评论">编辑</a>';
+
+        if (defined('EMPTY_TRASH_DAYS') && ! EMPTY_TRASH_DAYS) {
+            $delete_url = wp_nonce_url(
+                admin_url("comment.php?action=deletecomment&p={$post_id}&c={$comment_id}"),
+                "delete-comment_{$comment_id}"
+            );
+            $actions['delete'] = '<a href="' . esc_url($delete_url) . '" class="submitdelete" aria-label="永久删除此评论">永久删除</a>';
+        } else {
+            $trash_url = wp_nonce_url(
+                admin_url("comment.php?action=trashcomment&p={$post_id}&c={$comment_id}"),
+                "delete-comment_{$comment_id}"
+            );
+            $actions['trash'] = '<a href="' . esc_url($trash_url) . '" class="submitdelete" aria-label="将此评论移至回收站">移至回收站</a>';
+        }
+    }
+
+    $actions['view'] = '<a class="comment-link" href="' . esc_url(get_comment_link($comment)) . '" aria-label="查看此评论">查看</a>';
+
+    return $can_edit_comment ? apply_filters('comment_row_actions', $actions, $comment) : $actions;
+}
+
+function dn_format_dashboard_reply_actions($actions) {
+    $items = array();
+
+    foreach ($actions as $action => $link) {
+        $items[] = '<span class="' . esc_attr($action) . '">' . $link . '</span>';
+    }
+
+    return implode(' | ', $items);
+}
+
 function render_replies_to_me_dashboard_widget() {
     global $wpdb;
     $user_id = get_current_user_id();
@@ -205,22 +337,22 @@ function render_replies_to_me_dashboard_widget() {
         return;
     }
 
-    echo '<div id="activity-widget"><div id="latest-comments"><ul>';
+    echo '<div class="dn-replies-activity-widget"><div class="dn-replies-latest-comments"><ul>';
     foreach ($comments as $comment) {
-        $avatar_url = get_avatar_url($comment->comment_author_email, array('size' => 50));
+        $avatar_url = esc_url(get_avatar_url($comment->comment_author_email, array('size' => 50)));
         $author = esc_html($comment->comment_author);
         $post_title = esc_html(get_the_title($comment->comment_post_ID));
+        $post_url = esc_url(get_permalink($comment->comment_post_ID));
         $content = wp_html_excerpt(strip_tags($comment->comment_content), 50, '...');
-        $edit_url = admin_url("comment.php?action=editcomment&c={$comment->comment_ID}");
-        $view_url = esc_url(get_comment_link($comment));
+        $actions = dn_get_dashboard_reply_actions($comment);
         $status_style = ($comment->comment_approved == '0') ? 'background: #fcf0f1; border-left: 4px solid #d63638;' : '';
 
-        echo "<li class='comment' style='margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f1; {$status_style}'>";
+        echo "<li class='comment comment-item' style='margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f1; {$status_style}'>";
         echo "<img src='{$avatar_url}' class='avatar' style='float: left; margin-right: 15px; border-radius: 50%;' width='50' height='50'>";
-        echo "<div class='dashboard-comment-wrap' style='overflow: hidden;'>";
-        echo "<p class='comment-meta' style='margin: 0 0 5px; color: #646970;'>由 <strong>{$author}</strong> 发表于 <a href='".get_permalink($comment->comment_post_ID)."'>{$post_title}</a></p>";
+        echo "<div class='dashboard-comment-wrap has-row-actions' style='overflow: hidden;'>";
+        echo "<p class='comment-meta' style='margin: 0 0 5px; color: #646970;'>由 <strong>{$author}</strong> 发表于 <a href='{$post_url}'>{$post_title}</a></p>";
         echo "<blockquote style='margin: 0 0 8px; font-size: 13px; color: #3c434a; line-height: 1.5;'><p>{$content}</p></blockquote>";
-        echo "<p class='row-actions' style='margin: 0; font-size: 13px;'><a href='{$edit_url}'>编辑</a> | <a href='{$view_url}'>查看</a></p>";
+        echo "<p class='row-actions' style='margin: 0; font-size: 13px;'>" . dn_format_dashboard_reply_actions($actions) . "</p>";
         echo "</div></li>";
     }
     echo '</ul></div></div><div style="margin-top: 10px; text-align: right;"><a class="button button-primary" href="' . admin_url('edit-comments.php?reply_view=me') . '">查看所有回复</a></div>';

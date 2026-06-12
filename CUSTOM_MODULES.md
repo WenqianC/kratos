@@ -1,6 +1,6 @@
 # Custom Module Map
 
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
 This document describes the current custom code in this Kratos theme fork. It is a maintenance map, not a rewrite plan.
 
@@ -148,13 +148,16 @@ Compatibility note: it can also affect non-admin plugin/API queries that legitim
 
 Adds a custom comment-management experience:
 
-- Adds a "Replies to me" comments view.
+- Adds a "Replies to me" comments view and hides the redundant "Approved" view.
+- Preserves the "Replies to me" and "Mine" scopes when searching comments.
+- Keeps the global comment-view counts unchanged when viewing custom or isolated comment lists.
+- Limits non-moderator admin comment searches to visible author names and comment content.
 - Counts replies to the current user with a static per-request cache.
-- Adds current-user status counts for moderated, spam, and trash comments.
-- Alters comment admin SQL through `comments_clauses`.
+- Adds current-user status counts for moderated, spam, and trash comments with one grouped query.
 - Replaces the admin-bar comments bubble with a lightweight link.
 - Removes numeric comment counts from the browser tab title.
-- Adds a dashboard widget showing the latest 5 replies.
+- Adds a dashboard widget showing the latest 5 replies with the available comment actions.
+- Keeps Reply as the first action in the native dashboard activity widget so it has no leading separator.
 - Hides global comment counts in the dashboard overview for non-moderators.
 
 Performance note: the module avoids expensive top-bar count work, but the replies/count queries still touch the comments table and use subqueries. It is acceptable for moderate comment volume. If comment volume grows large, this should be the first comment module to profile.
@@ -167,6 +170,7 @@ Comment and front-end interaction:
 
 - Removes Kratos comment notification hooks.
 - Forces formatted paste in wpDiscuz comment fields to plain text.
+- Removes the unapprove and spam actions from editable comment rows and the comments bulk-action menus.
 - Hides email/IP display for non-admins in the comments admin screen using CSS.
 
 Privacy note: the email/IP hiding is cosmetic CSS. It hides values visually but does not remove them from the underlying admin page data.

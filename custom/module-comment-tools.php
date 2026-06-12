@@ -8,6 +8,20 @@ add_action('init', function() {
     remove_action('comment_post', 'comment_approved', 10);
 }, 99);
 
+add_filter('comment_row_actions', 'dn_remove_unwanted_comment_actions', 999);
+function dn_remove_unwanted_comment_actions($actions) {
+    unset($actions['unapprove'], $actions['spam']);
+
+    return $actions;
+}
+
+add_filter('bulk_actions-edit-comments', 'dn_remove_unwanted_comment_bulk_actions', 999);
+function dn_remove_unwanted_comment_bulk_actions($actions) {
+    unset($actions['unapprove'], $actions['spam']);
+
+    return $actions;
+}
+
 add_action('wp_footer', 'dn_force_plain_text_paste_in_comments', 99);
 function dn_force_plain_text_paste_in_comments() {
     if ( ! is_singular() ) return;
