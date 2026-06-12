@@ -83,6 +83,7 @@ Admin post-list author scope:
 - Defaults those tabs to the current user's posts.
 - Adds a "我的文章 / 全部文章" dropdown to the existing post-list filters.
 - Keeps the current status tab when filtering by an author-column link.
+- Shows the top bulk-action and filter controls in one horizontally scrollable row on mobile screens.
 - "全部文章" preserves the site's existing permission rules and does not grant access to additional content.
 
 Performance note: the default view adds an `author` condition to the existing main post query. A small inline admin script updates only the author links already rendered on the page. It adds no separate queries, user lookups, AJAX requests, or counts.

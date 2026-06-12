@@ -102,6 +102,7 @@ The `rg` command should return no package contents.
   - `1. 简要描述`：概括本次提交的目的和涉及范围。
   - `2. 修改前的表现`：说明修改前的行为、问题或限制。
   - `3. 修改后的表现`：说明修改后的行为，以及明确保留不变的重要行为。
+- Keep commit descriptions concise and avoid implementation details unless they are important for review or rollback.
 - Push only after checks pass or after telling the user what could not be checked.
 - Do not merge into `master` without user approval.
 
