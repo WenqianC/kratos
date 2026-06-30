@@ -7,7 +7,8 @@ add_action('register_form', 'add_security_question');
 function add_security_question()
 { ?>
     <p>
-        <label for="proof">验证问答：本站作品有个暴露m的冷门双马尾人物，她的职业是？英文全小写。2026.6.1起禁止公开在外发布答案，禁止公开发帖提供教学私聊答案。被发现停止新用户注册1个月。<br />
+        <label for="proof">验证问答（二选一）：1. 本站作品有个暴露m的冷门双马尾人物，她的职业是？英文全小写。2. 除调查组成员外谁最先获知L死讯？
+            <br>2026.6.1起禁止公开在外发布答案，禁止公开发帖提供教学私聊答案。被发现停止新用户注册1个月。<br /><b>2026.06.09-06.30期间因发现有人在抖音评论区公开提供答案，暂停注册。 </b><br />
             <input type="text" name="proof" id="proof" class="input" size="25" tabindex="20" /></label>
     </p>
 <?php }
@@ -24,11 +25,31 @@ function add_security_question2()
 add_action('register_post', 'add_security_question_validate', 10, 3);
 function add_security_question_validate($sanitized_user_login, $user_email, $errors)
 {
-    if (! isset($_POST['proof']) || empty($_POST['proof'])) {
+    $proof = dn_get_submitted_proof_answer();
+
+    if ('' === $proof) {
         $errors->add('proofempty', '<strong>错误</strong>: 您必须回答验证问题。');
-    } elseif (strtolower($_POST['proof']) != 'artist' && strtolower($_POST['proof']) != '画家') {
+    } elseif (!dn_is_registration_proof_answer_valid($proof)) {
         $errors->add('prooffail', '<strong>错误</strong>: 验证问题回答错误。');
     }
+}
+
+function dn_get_submitted_proof_answer()
+{
+    if (!isset($_POST['proof']) || !is_string($_POST['proof'])) {
+        return '';
+    }
+
+    return trim(sanitize_text_field(wp_unslash($_POST['proof'])));
+}
+
+function dn_is_registration_proof_answer_valid($proof)
+{
+    $proof_lower = strtolower($proof);
+
+    return in_array($proof_lower, array('artist', '画家'), true)
+        || false !== strpos($proof, '罗')
+        || false !== stripos($proof, 'roger');
 }
 
 add_action('lostpassword_post', 'add_lostpassword_security_question_validate');
@@ -38,9 +59,11 @@ function add_lostpassword_security_question_validate($errors)
         return;
     }
 
-    if (! isset($_POST['proof']) || empty($_POST['proof'])) {
+    $proof = dn_get_submitted_proof_answer();
+
+    if ('' === $proof) {
         $errors->add('proofempty', '<strong>错误</strong>: 您必须回答验证问题。');
-    } elseif (strtolower($_POST['proof']) != '0228' && strtolower($_POST['proof']) != '1031') {
+    } elseif (!in_array($proof, array('0228', '1031'), true)) {
         $errors->add('prooffail', '<strong>错误</strong>: 验证问题回答错误。');
     }
 }
