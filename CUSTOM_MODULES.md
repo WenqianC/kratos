@@ -224,19 +224,20 @@ Performance note: this is intentionally server-friendly for large media librarie
 
 ### `custom/module-bookmark.php`
 
-User article bookmarks:
+User article and author bookmarks:
 
-- Injects a bookmark button on logged-in single-post pages.
-- Depends on the single-post toolbar selector `.share.float-md-right.text-center`.
-- Stores bookmarks in user meta key `dn_bookmarks` as post ID => timestamp.
-- Handles add/remove through AJAX action `dn_toggle_bookmark`.
-- Validates new bookmark targets with `current_user_can('read_post', $post_id)`.
-- Adds a "我的收藏" admin menu page.
-- Shows title, author, publish time, bookmark time, post status, and remove action.
+- Injects "收藏文章" and "收藏作者" buttons on logged-in single-post pages, using the toolbar selector `.share.float-md-right.text-center`.
+- Lets the single-post toolbar buttons wrap on narrow screens and exposes admin table details through the standard mobile row toggle.
+- Stores article bookmarks in `dn_bookmarks` (post ID => timestamp) and author bookmarks in `dn_author_bookmarks` (author ID => timestamp).
+- Uses AJAX actions `dn_toggle_bookmark` and `dn_toggle_author_bookmark`; new bookmarks require access to the source post.
+- Adds a "我的收藏" admin page with separate article and author sections, each showing 15 records per page with independent pagination.
+- The article table keeps its author, post-date, and bookmark-time sorting through desktop table headers.
+- Article rows show title, linked author name when the author account exists, publish time, bookmark time, post status, and remove action.
 - Keeps showing existing post information for drafts/private/trash/future posts if the post still exists.
 - Shows a deleted placeholder only when the post no longer exists.
+- The author table shows the current display name linked to the author archive, bookmark time, and the newest published post (including password-protected posts). Deleted author records remain removable.
 
-Performance note: the admin list fetches all bookmarked post IDs for the current user, then sorts and paginates in PHP. This is fine for normal bookmark counts. If users may bookmark hundreds or thousands of posts, refactor to query only the current page.
+Performance note: default article browsing fetches post details only for the current 15 records. The existing author/post-date sorts read post details in batches of 100; the author table makes at most 15 bounded latest-post queries on an admin page.
 
 ### `custom/module-default-avatars.php`
 
@@ -291,5 +292,4 @@ The following non-custom files depend on or support custom behavior:
 - `custom/module-search-protection.php`: `force_strict_posts_limit_for_bots()` is server-friendly, but broad. Review if a future feature needs non-admin queries over 50 posts.
 - `custom/module-comment-tools.php`: comment email/IP hiding is visual only.
 - `custom/module-reply-to-me.php`: comment SQL should be profiled if comment volume grows.
-- `custom/module-bookmark.php`: bookmark admin list should be paged at query level if bookmark counts become large.
 - `custom/module-default-avatars.php`: avatar upload limit detection can be made more reliable if needed.

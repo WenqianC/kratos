@@ -1,9 +1,8 @@
 <?php
 /**
  * ====================================================
- * 模块：文章收藏功能 (极致性能优化 + 状态显示增强版)
- * 描述：基于 User Meta 存储，内存级哈希匹配与排序分页
- * 完美匹配原生 WordPress 后台排序三角图标 UI
+ * 模块：文章与作者收藏
+ * 描述：收藏记录存储于 User Meta，后台分页展示
  * ====================================================
  */
 
@@ -12,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * 1. 前端：动态注入【收藏文章】按钮及样式
+ * 1. 前端：动态注入文章和作者收藏按钮
  */
 add_action('wp_footer', 'dn_bookmark_frontend_script');
 function dn_bookmark_frontend_script() {
@@ -20,77 +19,96 @@ function dn_bookmark_frontend_script() {
         return;
     }
 
-    $post_id = get_the_ID();
+    $post_id = get_queried_object_id();
+    $author_id = absint(get_post_field('post_author', $post_id));
     $user_id = get_current_user_id();
     
     $bookmarks = get_user_meta($user_id, 'dn_bookmarks', true);
     $bookmarks = is_array($bookmarks) ? $bookmarks : array();
     $is_bookmarked = isset($bookmarks[$post_id]);
+    $author_bookmarks = get_user_meta($user_id, 'dn_author_bookmarks', true);
+    $author_bookmarks = is_array($author_bookmarks) ? $author_bookmarks : array();
+    $is_author_bookmarked = $author_id && isset($author_bookmarks[$author_id]);
     $nonce = wp_create_nonce('dn_bookmark_nonce');
     ?>
     <style>
-        #dn-bookmark-btn.bookmarked {
+        .dn-bookmark-button.bookmarked {
             color: #999 !important;
             border-color: #dcdcdc !important;
             background-color: transparent !important;
         }
-        #dn-bookmark-btn.is-loading {
+        .dn-bookmark-button.is-loading {
             opacity: 0.5;
             pointer-events: none;
+        }
+        @media screen and (max-width: 768px) {
+            .k-main .details .toolbar .share {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+            .k-main .details .toolbar .share .btn {
+                flex: 0 0 88px;
+                margin: 0 !important;
+            }
         }
     </style>
     <script>
     jQuery(document).ready(function($) {
-        var isBookmarked = <?php echo $is_bookmarked ? 'true' : 'false'; ?>;
-        var postId = <?php echo $post_id; ?>;
-        var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
-        var nonce = '<?php echo $nonce; ?>';
+        var postId = <?php echo absint($post_id); ?>;
+        var ajaxurl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+        var nonce = <?php echo wp_json_encode($nonce); ?>;
+        var $toolbar = $('.share.float-md-right.text-center').first();
 
-        var iconHtml = '<i class="fas fa-star"></i>';
-        var textHtml = '<span class="ml-1 bookmark-text">' + (isBookmarked ? '取消收藏' : '收藏文章') + '</span>';
-        var btnClass = isBookmarked ? 'btn btn-thumbs bookmarked' : 'btn btn-thumbs';
+        function addBookmarkButton(id, action, inactiveText, selected) {
+            var activeLabel = '取消' + inactiveText;
+            var $btn = $('<a>', {
+                href: '#', id: id, role: 'button',
+                'aria-pressed': selected ? 'true' : 'false',
+                'aria-label': selected ? activeLabel : inactiveText,
+                'class': 'btn btn-thumbs dn-bookmark-button' + (selected ? ' bookmarked' : '')
+            }).css({marginLeft: '10px', transition: 'all 0.3s'});
+            $btn.append($('<i>', {'class': 'fas fa-star'}));
+            $btn.append($('<span>', {'class': 'ml-1 bookmark-text'}).text(selected ? '取消收藏' : inactiveText));
+            $toolbar.append($btn);
 
-        var btnHtml = '<a href="javascript:;" id="dn-bookmark-btn" role="button" class="' + btnClass + '" style="margin-left: 10px; transition: all 0.3s;">' + iconHtml + textHtml + '</a>';
-        $('.share.float-md-right.text-center').append(btnHtml);
+            $btn.on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                if ($btn.hasClass('is-loading')) return;
+                $btn.addClass('is-loading');
 
-        $('#dn-bookmark-btn').on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-
-            var $btn = $(this);
-            
-            if ($btn.hasClass('is-loading')) return;
-            $btn.addClass('is-loading');
-
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'dn_toggle_bookmark',
-                    post_id: postId,
-                    security: nonce
-                },
-                success: function(response) {
-                    $btn.removeClass('is-loading');
-                    if (response.success) {
-                        if (response.data.status === 'added') {
-                            $btn.addClass('bookmarked');
-                            $btn.find('.bookmark-text').text('取消收藏');
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {action: action, post_id: postId, security: nonce},
+                    success: function(response) {
+                        $btn.removeClass('is-loading');
+                        if (response.success) {
+                            var added = response.data.status === 'added';
+                            $btn.toggleClass('bookmarked', added);
+                            $btn.attr('aria-pressed', added ? 'true' : 'false');
+                            $btn.attr('aria-label', added ? activeLabel : inactiveText);
+                            $btn.find('.bookmark-text').text(added ? '取消收藏' : inactiveText);
                         } else {
-                            $btn.removeClass('bookmarked');
-                            $btn.find('.bookmark-text').text('收藏文章');
+                            alert(response.data || '操作失败，请重试');
                         }
-                    } else {
-                        alert(response.data || '操作失败，请重试');
+                    },
+                    error: function(xhr) {
+                        $btn.removeClass('is-loading');
+                        alert('网络连接错误 (' + xhr.status + ')，请稍后再试');
                     }
-                },
-                error: function(xhr) {
-                    $btn.removeClass('is-loading');
-                    alert('网络连接错误 (' + xhr.status + ')，请稍后再试');
-                }
+                });
             });
-        });
+        }
+
+        if (!$toolbar.length) return;
+        addBookmarkButton('dn-bookmark-btn', 'dn_toggle_bookmark', '收藏文章', <?php echo $is_bookmarked ? 'true' : 'false'; ?>);
+        <?php if ($author_id) : ?>
+        addBookmarkButton('dn-author-bookmark-btn', 'dn_toggle_author_bookmark', '收藏作者', <?php echo $is_author_bookmarked ? 'true' : 'false'; ?>);
+        <?php endif; ?>
     });
     </script>
     <?php
@@ -126,6 +144,40 @@ function dn_toggle_bookmark_ajax() {
     }
 
     update_user_meta($user_id, 'dn_bookmarks', $bookmarks);
+    wp_send_json_success(array('status' => $status));
+}
+
+add_action('wp_ajax_dn_toggle_author_bookmark', 'dn_toggle_author_bookmark_ajax');
+function dn_toggle_author_bookmark_ajax() {
+    check_ajax_referer('dn_bookmark_nonce', 'security');
+
+    $post_id = isset($_POST['post_id']) ? absint(wp_unslash($_POST['post_id'])) : 0;
+    $user_id = get_current_user_id();
+    $post = $post_id ? get_post($post_id) : null;
+    $author_id = $post ? absint($post->post_author) : 0;
+
+    if (!$user_id || !$author_id) {
+        wp_send_json_error('参数错误');
+    }
+
+    $bookmarks = get_user_meta($user_id, 'dn_author_bookmarks', true);
+    $bookmarks = is_array($bookmarks) ? $bookmarks : array();
+
+    if (isset($bookmarks[$author_id])) {
+        unset($bookmarks[$author_id]);
+        $status = 'removed';
+    } else {
+        if (!dn_user_can_read_bookmark_post($post_id) || !get_userdata($author_id)) {
+            wp_send_json_error('无权收藏该作者。');
+        }
+
+        $bookmarks[$author_id] = current_time('timestamp');
+        $status = 'added';
+    }
+
+    if (!update_user_meta($user_id, 'dn_author_bookmarks', $bookmarks)) {
+        wp_send_json_error('操作失败，请重试。');
+    }
     wp_send_json_success(array('status' => $status));
 }
 
@@ -175,108 +227,183 @@ function dn_user_can_read_bookmark_post($post_id) {
 }
 
 /**
- * 4. 后台：渲染列表（内存级哈希与排序，支持显示状态与彻底删除）
+ * 后台文章信息按固定批次读取，避免收藏较多时生成过长的 IN 查询。
+ */
+function dn_bookmark_get_post_details($post_ids) {
+    global $wpdb;
+
+    $posts_indexed = array();
+    $post_ids = array_values(array_unique(array_filter(array_map('absint', $post_ids))));
+
+    for ($offset = 0; $offset < count($post_ids); $offset += 100) {
+        $chunk = array_slice($post_ids, $offset, 100);
+        $placeholders = implode(',', array_fill(0, count($chunk), '%d'));
+        $query = "SELECT p.ID, p.post_title, p.post_author, p.post_date, p.post_status, u.display_name AS author_name
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->users} u ON p.post_author = u.ID
+            WHERE p.ID IN ($placeholders)
+            LIMIT %d";
+        $db_posts = $wpdb->get_results($wpdb->prepare($query, array_merge($chunk, array(count($chunk)))));
+
+        foreach ($db_posts as $post) {
+            $posts_indexed[$post->ID] = $post;
+        }
+    }
+
+    return $posts_indexed;
+}
+
+function dn_bookmark_get_post_rows($bookmarks, $posts_indexed) {
+    $rows = array();
+    foreach ($bookmarks as $pid => $time) {
+        $pid = absint($pid);
+        if (!$pid) {
+            continue;
+        }
+
+        $post_exists = isset($posts_indexed[$pid]);
+        $post = $post_exists ? $posts_indexed[$pid] : null;
+        $rows[] = array(
+            'ID' => $pid,
+            'bookmark_time' => $time,
+            'post_title' => $post && !empty($post->post_title) ? $post->post_title : '(该文章已被彻底删除)',
+            'author_id' => $post ? absint($post->post_author) : 0,
+            'author_name' => $post && $post->author_name ? $post->author_name : '—',
+            'post_date' => $post ? $post->post_date : '0000-00-00 00:00:00',
+            'post_status' => $post ? $post->post_status : '',
+            'post_exists' => $post_exists,
+        );
+    }
+    return $rows;
+}
+
+function dn_bookmark_page_links($current, $total, $page_url, $page_key) {
+    if ($total < 2) {
+        return '';
+    }
+
+    $pages = array_unique(array_merge(
+        array(1, $total),
+        range(max(1, $current - 2), min($total, $current + 2))
+    ));
+    sort($pages, SORT_NUMERIC);
+    $links = array();
+
+    if ($current > 1) {
+        $links[] = '<a class="prev page-numbers" href="' . esc_url($page_url(array($page_key => $current - 1))) . '">&laquo;</a>';
+    }
+
+    $previous = 0;
+    foreach ($pages as $page) {
+        if ($previous && $page > $previous + 1) {
+            $links[] = '<span class="page-numbers dots">&hellip;</span>';
+        }
+        $number = esc_html(number_format_i18n($page));
+        if ($page === $current) {
+            $links[] = '<span aria-current="page" class="page-numbers current">' . $number . '</span>';
+        } else {
+            $links[] = '<a class="page-numbers" href="' . esc_url($page_url(array($page_key => $page))) . '">' . $number . '</a>';
+        }
+        $previous = $page;
+    }
+
+    if ($current < $total) {
+        $links[] = '<a class="next page-numbers" href="' . esc_url($page_url(array($page_key => $current + 1))) . '">&raquo;</a>';
+    }
+
+    return implode("\n", $links);
+}
+
+/**
+ * 4. 后台：渲染文章和作者收藏列表。
  */
 function dn_render_bookmarks_page() {
     $user_id = get_current_user_id();
-    
-    // 移除操作
-    if (isset($_GET['action']) && $_GET['action'] === 'remove' && isset($_GET['post_id'])) {
-        check_admin_referer('dn_remove_bookmark_' . intval($_GET['post_id']));
-        $remove_id = intval($_GET['post_id']);
-        $bookmarks = get_user_meta($user_id, 'dn_bookmarks', true);
-        if (is_array($bookmarks) && isset($bookmarks[$remove_id])) {
-            unset($bookmarks[$remove_id]);
-            update_user_meta($user_id, 'dn_bookmarks', $bookmarks);
+
+    $action = isset($_GET['action']) && is_string($_GET['action']) ? sanitize_key(wp_unslash($_GET['action'])) : '';
+    if ($action === 'remove' && isset($_GET['post_id']) && is_scalar($_GET['post_id'])) {
+        $remove_id = absint(wp_unslash($_GET['post_id']));
+        check_admin_referer('dn_remove_bookmark_' . $remove_id);
+        $meta_key = 'dn_bookmarks';
+    } elseif ($action === 'remove_author' && isset($_GET['author_id']) && is_scalar($_GET['author_id'])) {
+        $remove_id = absint(wp_unslash($_GET['author_id']));
+        check_admin_referer('dn_remove_author_bookmark_' . $remove_id);
+        $meta_key = 'dn_author_bookmarks';
+    }
+
+    if (isset($meta_key) && $remove_id) {
+        $saved = get_user_meta($user_id, $meta_key, true);
+        if (is_array($saved) && isset($saved[$remove_id])) {
+            unset($saved[$remove_id]);
+            update_user_meta($user_id, $meta_key, $saved);
             echo '<div class="updated notice is-dismissible"><p>已成功取消收藏。</p></div>';
         }
     }
 
     $bookmarks = get_user_meta($user_id, 'dn_bookmarks', true);
     $bookmarks = is_array($bookmarks) ? $bookmarks : array();
+    $author_bookmarks = get_user_meta($user_id, 'dn_author_bookmarks', true);
+    $author_bookmarks = is_array($author_bookmarks) ? $author_bookmarks : array();
 
-    $orderby = isset($_GET['orderby']) ? sanitize_key($_GET['orderby']) : 'bookmark_time';
+    $orderby = isset($_GET['orderby']) && is_string($_GET['orderby']) ? sanitize_key(wp_unslash($_GET['orderby'])) : 'bookmark_time';
     $allowed_orderby = array('author', 'post_date', 'bookmark_time');
     if (!in_array($orderby, $allowed_orderby, true)) {
         $orderby = 'bookmark_time';
     }
 
-    $order = isset($_GET['order']) && strtolower($_GET['order']) === 'asc' ? 'asc' : 'desc';
-    $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+    $order = isset($_GET['order']) && is_string($_GET['order']) && sanitize_key(wp_unslash($_GET['order'])) === 'asc' ? 'asc' : 'desc';
     $per_page = 15;
-    
     $total_items = count($bookmarks);
-    $total_pages = ceil($total_items / $per_page);
+    $total_pages = (int) ceil($total_items / $per_page);
+    $paged = isset($_GET['paged']) && is_scalar($_GET['paged']) ? max(1, absint(wp_unslash($_GET['paged']))) : 1;
+    $paged = min($paged, max(1, $total_pages));
     $offset = ($paged - 1) * $per_page;
 
-    $display_posts = array();
-    $post_ids = array_filter(array_map('intval', array_keys($bookmarks)));
-
-    // 查询逻辑重构：统一查询所有状态的数据，并在 PHP 中组装排序
-    if (!empty($post_ids)) {
-        global $wpdb;
-        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
-        
-        // 极速提取：一次性拉取涉及到的所有文章数据（不受状态限制）
-        $db_posts = $wpdb->get_results($wpdb->prepare("
-            SELECT p.ID, p.post_title, p.post_author, p.post_date, p.post_status, u.display_name AS author_name 
-            FROM {$wpdb->posts} p
-            LEFT JOIN {$wpdb->users} u ON p.post_author = u.ID
-            WHERE p.ID IN ($placeholders)
-        ", $post_ids));
-
-        // 构建哈希字典
-        $posts_indexed = array();
-        foreach ($db_posts as $post) {
-            $posts_indexed[$post->ID] = $post;
+    if ($orderby === 'bookmark_time') {
+        if ($order === 'asc') {
+            asort($bookmarks, SORT_NUMERIC);
+        } else {
+            arsort($bookmarks, SORT_NUMERIC);
         }
-
-        // 构建一个包含“彻底删除”数据在内的完整数组，供自由排序
-        $all_items = array();
-        foreach ($bookmarks as $pid => $time) {
-            $pid = absint($pid);
-            if (!$pid) {
-                continue;
-            }
-
-            $post_exists = isset($posts_indexed[$pid]);
-            $p = $post_exists ? $posts_indexed[$pid] : null;
-
-            $all_items[] = array(
-                'ID' => $pid,
-                'bookmark_time' => $time,
-                'post_title' => $p && !empty($p->post_title) ? $p->post_title : '(该文章已被彻底删除)',
-                'author_name' => $p && $p->author_name ? $p->author_name : '—',
-                'post_date' => $p ? $p->post_date : '0000-00-00 00:00:00',
-                'post_status' => $p ? $p->post_status : '',
-                'post_exists' => $post_exists
-            );
-        }
-
-        // 使用 PHP 的 usort 魔法进行多维度精准排序
+        $page_bookmarks = array_slice($bookmarks, $offset, $per_page, true);
+        $display_posts = dn_bookmark_get_post_rows($page_bookmarks, dn_bookmark_get_post_details(array_keys($page_bookmarks)));
+    } else {
+        $all_items = dn_bookmark_get_post_rows($bookmarks, dn_bookmark_get_post_details(array_keys($bookmarks)));
         usort($all_items, function($a, $b) use ($orderby, $order) {
             if ($orderby === 'author') {
                 $valA = $a['author_name'];
                 $valB = $b['author_name'];
-            } elseif ($orderby === 'post_date') {
+            } else {
                 $valA = $a['post_date'];
                 $valB = $b['post_date'];
-            } else {
-                $valA = $a['bookmark_time'];
-                $valB = $b['bookmark_time'];
             }
-
-            if ($valA == $valB) return 0;
+            if ($valA == $valB) {
+                return 0;
+            }
             $cmp = ($valA < $valB) ? -1 : 1;
             return ($order === 'asc') ? $cmp : -$cmp;
         });
-
-        // 完美分页切割
         $display_posts = array_slice($all_items, $offset, $per_page);
     }
 
-    // --- 动态生成表头链接与图标样式 ---
-    $get_sort_attributes = function($column_name) use ($orderby, $order) {
+    $author_total_items = count($author_bookmarks);
+    $author_total_pages = (int) ceil($author_total_items / $per_page);
+    $author_page = isset($_GET['author_page']) && is_scalar($_GET['author_page']) ? max(1, absint(wp_unslash($_GET['author_page']))) : 1;
+    $author_page = min($author_page, max(1, $author_total_pages));
+    arsort($author_bookmarks, SORT_NUMERIC);
+    $display_authors = array_slice($author_bookmarks, ($author_page - 1) * $per_page, $per_page, true);
+
+    $page_url = function($overrides = array()) use ($orderby, $order, $paged, $author_page) {
+        return add_query_arg(array_merge(array(
+            'page' => 'dn-bookmarks',
+            'orderby' => $orderby,
+            'order' => $order,
+            'paged' => $paged,
+            'author_page' => $author_page,
+        ), $overrides), admin_url('admin.php'));
+    };
+
+    $get_sort_attributes = function($column_name) use ($orderby, $order, $page_url) {
         if ($orderby === $column_name) {
             $class = "sorted {$order}";
             $next_order = ($order === 'asc') ? 'desc' : 'asc';
@@ -284,7 +411,7 @@ function dn_render_bookmarks_page() {
             $class = "sortable desc";
             $next_order = 'desc';
         }
-        $url = "?page=dn-bookmarks&orderby={$column_name}&order={$next_order}";
+        $url = $page_url(array('orderby' => $column_name, 'order' => $next_order, 'paged' => 1));
         return array('class' => $class, 'url' => $url);
     };
 
@@ -296,21 +423,26 @@ function dn_render_bookmarks_page() {
     <div class="wrap">
         <h1 class="wp-heading-inline">我的收藏</h1>
         <hr class="wp-header-end">
+        <style>
+            .dn-bookmark-divider {
+                border: 0;
+                border-top: 1px solid #c3c4c7;
+                margin: 26px 0 18px;
+            }
+            .dn-bookmark-module-title {
+                font-size: 18px;
+                margin: 0 0 12px;
+            }
+        </style>
+
+        <hr class="dn-bookmark-divider">
+        <h2 class="dn-bookmark-module-title">文章收藏</h2>
 
         <div class="tablenav top">
             <div class="tablenav-pages">
-                <span class="displaying-num">共 <?php echo $total_items; ?> 篇</span>
+                <span class="displaying-num">共 <?php echo esc_html($total_items); ?> 篇</span>
                 <?php
-                if ($total_pages > 1) {
-                    echo paginate_links(array(
-                        'base' => add_query_arg('paged', '%#%'),
-                        'format' => '',
-                        'prev_text' => '&laquo;',
-                        'next_text' => '&raquo;',
-                        'total' => $total_pages,
-                        'current' => $paged
-                    ));
-                }
+                echo wp_kses_post(dn_bookmark_page_links($paged, $total_pages, $page_url, 'paged'));
                 ?>
             </div>
         </div>
@@ -362,10 +494,10 @@ function dn_render_bookmarks_page() {
                         $pid = $p['ID'];
                         $post_date = $p['post_date'] !== '0000-00-00 00:00:00' ? date('Y-m-d H:i', strtotime($p['post_date'])) : '—';
                         $bookmark_time = date_i18n('Y-m-d H:i', $p['bookmark_time']);
-                        $remove_url = wp_nonce_url(add_query_arg(array('action' => 'remove', 'post_id' => $pid)), 'dn_remove_bookmark_' . $pid);
+                        $remove_url = wp_nonce_url($page_url(array('action' => 'remove', 'post_id' => $pid)), 'dn_remove_bookmark_' . $pid);
                     ?>
                         <tr>
-                            <td>
+                            <td class="column-primary" data-colname="文章标题">
                                 <strong>
                                     <?php if ($p['post_exists'] && $p['post_status'] === 'publish') : ?>
                                         <a href="<?php echo esc_url(get_permalink($pid)); ?>" target="_blank"><?php echo esc_html($p['post_title']); ?></a>
@@ -373,14 +505,91 @@ function dn_render_bookmarks_page() {
                                         <span style="color: #999; font-weight: normal;"><?php echo esc_html($p['post_title']); ?></span>
                                     <?php endif; ?>
                                 </strong>
+                                <button type="button" class="toggle-row"><span class="screen-reader-text">显示此文章收藏的详情</span></button>
                             </td>
-                            <td><?php echo esc_html($p['author_name']); ?></td>
-                            <td><?php echo esc_html($post_date); ?></td>
-                            <td><?php echo esc_html($bookmark_time); ?></td>
-                            <td><?php echo dn_get_bookmark_status_badge($p['post_status'], $p['post_exists']); ?></td>
-                            <td>
+                            <td data-colname="作者">
+                                <?php if ($p['author_id'] && $p['author_name'] !== '—') : ?>
+                                    <a href="<?php echo esc_url(get_author_posts_url($p['author_id'])); ?>"><?php echo esc_html($p['author_name']); ?></a>
+                                <?php else : ?>
+                                    <?php echo esc_html($p['author_name']); ?>
+                                <?php endif; ?>
+                            </td>
+                            <td data-colname="发布时间"><?php echo esc_html($post_date); ?></td>
+                            <td data-colname="收藏时间"><?php echo esc_html($bookmark_time); ?></td>
+                            <td data-colname="文章状态"><?php echo dn_get_bookmark_status_badge($p['post_status'], $p['post_exists']); ?></td>
+                            <td data-colname="操作">
                                 <a href="<?php echo esc_url($remove_url); ?>" style="color: #d63638;" onclick="return confirm('确定要移除此收藏吗？');">移除</a>
                             </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+
+        <hr class="dn-bookmark-divider">
+        <h2 class="dn-bookmark-module-title">作者收藏</h2>
+
+        <div class="tablenav top">
+            <div class="tablenav-pages">
+                <span class="displaying-num">共 <?php echo esc_html($author_total_items); ?> 位</span>
+                <?php
+                echo wp_kses_post(dn_bookmark_page_links($author_page, $author_total_pages, $page_url, 'author_page'));
+                ?>
+            </div>
+        </div>
+
+        <table class="wp-list-table widefat fixed striped dn-author-bookmark-table">
+            <thead>
+                <tr>
+                    <th scope="col" class="manage-column column-primary">作者昵称</th>
+                    <th scope="col" class="manage-column">收藏时间</th>
+                    <th scope="col" class="manage-column">最新发布文章标题</th>
+                    <th scope="col" class="manage-column" style="width: 80px;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($display_authors)) : ?>
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 30px 10px; color: #666;">您还没有收藏任何作者。</td>
+                    </tr>
+                <?php else : ?>
+                    <?php foreach ($display_authors as $author_id => $saved_time) :
+                        $author_id = absint($author_id);
+                        $author = $author_id ? get_userdata($author_id) : false;
+                        $latest_post_ids = $author ? get_posts(array(
+                            'author' => $author_id,
+                            'post_type' => 'post',
+                            'post_status' => 'publish',
+                            'posts_per_page' => 1,
+                            'orderby' => 'date',
+                            'order' => 'DESC',
+                            'fields' => 'ids',
+                            'no_found_rows' => true,
+                            'ignore_sticky_posts' => true,
+                            'update_post_meta_cache' => false,
+                            'update_post_term_cache' => false,
+                        )) : array();
+                        $latest_post_id = $latest_post_ids ? $latest_post_ids[0] : 0;
+                        $remove_url = wp_nonce_url($page_url(array('action' => 'remove_author', 'author_id' => $author_id)), 'dn_remove_author_bookmark_' . $author_id);
+                    ?>
+                        <tr>
+                            <td class="column-primary" data-colname="作者昵称">
+                                <?php if ($author) : ?>
+                                    <strong><a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>"><?php echo esc_html($author->display_name); ?></a></strong>
+                                <?php else : ?>
+                                    <span style="color: #999; font-size: 12px;">原作者账号已删除</span>
+                                <?php endif; ?>
+                                <button type="button" class="toggle-row"><span class="screen-reader-text">显示此作者收藏的详情</span></button>
+                            </td>
+                            <td data-colname="收藏时间"><?php echo esc_html(date_i18n('Y-m-d H:i', $saved_time)); ?></td>
+                            <td data-colname="最新发布文章标题">
+                                <?php if ($latest_post_id) : ?>
+                                    <a href="<?php echo esc_url(get_permalink($latest_post_id)); ?>"><?php echo esc_html(get_the_title($latest_post_id)); ?></a>
+                                <?php else : ?>
+                                    <span style="color: #999;">暂无已发布文章</span>
+                                <?php endif; ?>
+                            </td>
+                            <td data-colname="操作"><a href="<?php echo esc_url($remove_url); ?>" style="color: #d63638;" onclick="return confirm('确定要移除此收藏吗？');">移除</a></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
