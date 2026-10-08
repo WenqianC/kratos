@@ -51,7 +51,14 @@ function dn_get_defined_avatars() {
         226341 => ['url' => 'https://cdn.dnforlife.com/2026/05/夜神月透明底_200_200.png', 'name' => '夜神月'],
         226342 => ['url' => 'https://cdn.dnforlife.com/2026/05/L透明底_200_200.png', 'name' => 'L'],
         226343 => ['url' => 'https://cdn.dnforlife.com/2026/05/BB透明底_200_200.png', 'name' => 'BB'],
-        226855 => ['url' => 'https://cdn.dnforlife.com/2026/05/基拉组动图_200_200.gif', 'name' => '基拉组']
+        226855 => ['url' => 'https://cdn.dnforlife.com/2026/05/基拉组动图_200_200.gif', 'name' => '基拉组'],
+        239047 => ['url' => 'https://cdn.dnforlife.com/2026/07/弥海砂邦布摇摇_120_120.gif', 'name' => '弥海砂'],
+        252691 => ['url' => 'https://cdn.dnforlife.com/2026/10/弥海砂-头像_150_150.png', 'name' => '弥海砂'],
+        252692 => ['url' => 'https://cdn.dnforlife.com/2026/10/梅洛_150_150.png', 'name' => '梅洛'],
+        252693 => ['url' => 'https://cdn.dnforlife.com/2026/10/梅洛吃瓜_150_150.png', 'name' => '梅洛'],
+        252694 => ['url' => 'https://cdn.dnforlife.com/2026/10/弥海砂_150_150.png', 'name' => '弥海砂'],
+        252695 => ['url' => 'https://cdn.dnforlife.com/2026/10/夜神月_150_150.png', 'name' => '夜神月'],
+        252696 => ['url' => 'https://cdn.dnforlife.com/2026/10/L_150_150.png', 'name' => 'L']
         // 随时在此处追加新角色
     ];
 
@@ -114,6 +121,39 @@ function dn_render_fixed_avatars_ui($user) {
             
             var originalAvatarSrc = $pluginPreview.length ? $pluginPreview.eq(0).attr('src') : ($nativeAvatar.length ? $nativeAvatar.eq(0).attr('src') : '');
             var originalAvatarId = $pluginInput.val();
+            var avatarPickerOpen = false;
+            var avatarMediaFrame = null;
+
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('#wpua-add, #wpua-add-existing')) return;
+
+                avatarPickerOpen = true;
+                window.setTimeout(function() {
+                    var frame = window.wp && wp.media && wp.media.wpUserAvatar && wp.media.wpUserAvatar._frame;
+                    if (!frame) {
+                        avatarPickerOpen = false;
+                    } else if (frame !== avatarMediaFrame) {
+                        avatarMediaFrame = frame;
+                        frame.on('close', function() { avatarPickerOpen = false; });
+                    }
+                }, 0);
+            }, true);
+
+            document.addEventListener('change', function(event) {
+                var input = event.target;
+                if (input.type !== 'file' || !input.files || !input.files.length) return;
+                if (input.id !== 'wpua-file' && input.id !== 'wpua-file-existing' && !avatarPickerOpen) return;
+
+                for (var i = 0; i < input.files.length; i++) {
+                    if (input.files[i].size > <?php echo (int) DN_AVATAR_MAX_BYTES; ?>) {
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        input.value = '';
+                        window.alert('头像上传上限为 100KB，请选择不超过 100KB 的图片。');
+                        return;
+                    }
+                }
+            }, true);
 
             if ($pluginContainer.length) {
                 $('#dn-preset-avatar-wrapper').appendTo($pluginContainer).show();
