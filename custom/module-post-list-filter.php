@@ -23,7 +23,7 @@ function dn_is_admin_post_scope_screen($post_type, $post_status)
     return is_admin()
         && 'edit.php' === $pagenow
         && 'post' === $post_type
-        && in_array($post_status, array('publish', 'draft', 'trash'), true);
+        && in_array($post_status, array('publish', 'draft', 'private', 'trash'), true);
 }
 
 function dn_get_admin_post_scope()

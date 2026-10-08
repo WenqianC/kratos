@@ -79,7 +79,7 @@ Performance note: pagination uses WordPress's existing in-request page count and
 
 Admin post-list author scope:
 
-- Applies only to the Published, Draft, and Trash tabs for posts.
+- Applies only to the Published, Draft, Private, and Trash tabs for posts.
 - Defaults those tabs to the current user's posts.
 - Adds a "我的文章 / 全部文章" dropdown to the existing post-list filters.
 - Keeps the current status tab when filtering by an author-column link.
