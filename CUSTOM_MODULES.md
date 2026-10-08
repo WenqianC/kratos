@@ -22,6 +22,7 @@ Follow the performance and coding constraints in `AGENTS.md` when changing these
   - `custom/module-search-protection.php`
   - `custom/module-reply-to-me.php`
   - `custom/module-comment-tools.php`
+  - `custom/module-comment-author-archive.php`
   - `custom/module-blocklist.php`
   - `custom/module-media-library.php`
   - `custom/module-bookmark.php`
@@ -176,6 +177,14 @@ Comment and front-end interaction:
 - Hides email/IP display for non-admins in the comments admin screen using CSS.
 
 Privacy note: the email/IP hiding is cosmetic CSS. It hides values visually but does not remove them from the underlying admin page data.
+
+### `custom/module-comment-author-archive.php`
+
+Comment author archive links:
+
+- Makes registered wpDiscuz commenters' names open their WordPress author archive on posts.
+- Leaves guest comments, deleted accounts, and comments on other post types unchanged.
+- Uses the commenter user ID already supplied by wpDiscuz, without a separate user lookup or AJAX request.
 
 ### `custom/module-blocklist.php`
 
